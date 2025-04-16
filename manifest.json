@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "name": "BBOT",
+  "version": "1.0",
+  "description": "Firefox extension for BBOT - Bug Bounty Recon Tool",
+  "permissions": [
+    "activeTab",
+    "nativeMessaging",
+    "storage",
+    "history",
+    "file:///*",
+    "sidebarAction"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bbot-scan@example.org"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "sidebar_action": {
+    "default_panel": "index.html",
+    "default_title": "BBOT Scanner Panel",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "browser_action": {
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  }
+}

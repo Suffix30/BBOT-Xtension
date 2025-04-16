@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BBOT Helper</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>BBOT Helper</h1>
+      <p class="subtitle">I am from the government I am here to help</p>
+    </header>
+
+    <div class="hosts-section">
+      <h2>Scanned Targets</h2>
+      <pre id="hostsArea" class="hosts-area"></pre>
+    </div>
+
+    <div class="scan-section">
+      <input type="text" id="target" placeholder="Enter target domain">
+      <select id="deadly">
+        <option value="--allow-deadly">YES</option>
+        <option value="+">NO</option>
+      </select>
+      
+      <label><input type="checkbox" id="burpsuite"> Burpproxy?</label>
+      <label><input type="checkbox" id="viewPreset"> View Preset?</label>
+      <label><input type="checkbox" id="strictScope"> strictScope?</label>
+      
+      <select id="scanSelect">
+        <option value="baddns-thorough">BAD DNS Thorough</option>
+        <option value="cloud-enum">Cloud Enumeration</option>
+        <option value="code-enum">Code Enumeration</option>
+        <option value="dirbust-heavy">Directory Brute-force (Heavy)</option>
+        <option value="dirbust-light">Directory Brute-force (Light)</option>
+        <option value="dotnet-audit">.NET/IIS Audit</option>
+        <option value="email-enum">Email Enumeration</option>
+        <option value="iis-shortnames">IIS Shortname Enumeration</option>
+        <option value="kitchen-sink">Kitchen Sink (All Modules)</option>
+        <option value="paramminer">Parameter Brute-force</option>
+        <option value="spider">Web Spider</option>
+        <option value="subdomain-enum">Subdomain Enumeration</option>
+        <option value="web-basic">Basic Web Scan</option>
+        <option value="web-screenshots">Web Screenshot Capture</option>
+        <option value="web-thorough">Thorough Web Scan</option>
+      </select>
+      
+      <select id="eventTypeSelect">
+        <option value="*" selected>All Events (*)</option>
+        <option value="ASN">ASN</option>
+        <option value="AZURE_TENANT">Azure Tenant</option>
+        <option value="CODE_REPOSITORY">Code Repository</option>
+        <option value="DNS_NAME">DNS Name</option>
+        <option value="DNS_NAME_UNRESOLVED">Unresolved DNS Name</option>
+        <option value="EMAIL_ADDRESS">Email Address</option>
+        <option value="FILESYSTEM">Filesystem</option>
+        <option value="FINDING">Finding</option>
+        <option value="GEOLOCATION">Geolocation</option>
+        <option value="HASHED_PASSWORD">Hashed Password</option>
+        <option value="HTTP_RESPONSE">HTTP Response</option>
+        <option value="IP_ADDRESS">IP Address</option>
+        <option value="IP_RANGE">IP Range</option>
+        <option value="MOBILE_APP">Mobile App</option>
+        <option value="OPEN_TCP_PORT">Open TCP Port</option>
+        <option value="ORG_STUB">Organization Stub</option>
+        <option value="PASSWORD">Password</option>
+        <option value="PROTOCOL">Protocol</option>
+        <option value="RAW_DNS_RECORD">Raw DNS Record</option>
+        <option value="RAW_TEXT">Raw Text</option>
+        <option value="SOCIAL">Social</option>
+        <option value="STORAGE_BUCKET">Storage Bucket</option>
+        <option value="TECHNOLOGY">Technology</option>
+        <option value="URL">URL</option>
+        <option value="URL_HINT">URL Hint</option>
+        <option value="URL_UNVERIFIED">Unverified URL</option>
+        <option value="USERNAME">Username</option>
+        <option value="VHOST">Virtual Host (VHOST)</option>
+        <option value="VULNERABILITY">Vulnerability</option>
+        <option value="WAF">Web Application Firewall (WAF)</option>
+        <option value="WEBSCREENSHOT">Web Screenshot</option>
+        <option value="WEB_PARAMETER">Web Parameter</option>
+      </select>
+      
+      <select id="modDeps">
+        <option value="--ignore-failed-deps" selected>Ignore Failed Deps</option>
+        <option value="--no-deps">Don't install deps.</option>
+        <option value="--forced-deps">Force</option>
+        <option value="--retry-deps">retry deps</option>
+        <option value="--install-all-deps">install all</option>
+      </select>
+      
+      <select id="flagSelect">
+        <option value="" selected>N/A</option>
+        <option value="web-thorough">Web Thorough</option>
+        <option value="portscan">Port Scan</option>
+        <option value="service-enum">Service Enumeration</option>
+        <option value="passive">Passive</option>
+        <option value="subdomain-enum">Subdomain Enumeration</option>
+        <option value="web-basic">Web Basic</option>
+        <option value="code-enum">Code Enumeration</option>
+        <option value="social-enum">Social Enumeration</option>
+        <option value="safe">Safe</option>
+        <option value="cloud-enum">Cloud Enumeration</option>
+        <option value="report">Report</option>
+        <option value="baddns">Bad DNS</option>
+        <option value="web-paramminer">Web Parameter Miner</option>
+        <option value="subdomain-hijack">Subdomain Hijack</option>
+        <option value="active">Active</option>
+        <option value="aggressive">Aggressive</option>
+        <option value="email-enum">Email Enumeration</option>
+        <option value="affiliates">Affiliates</option>
+        <option value="web-screenshots">Web Screenshots</option>
+        <option value="slow">Slow</option>
+        <option value="deadly">Deadly</option>
+        <option value="iis-shortnames">IIS Short Names</option>
+      </select>
+      
+      <button id="scanButton">Scan Target</button>
+      <button id="getOutfileBtn">Get Outfiles</button>
+      <button id="clearOutputBtn">Clear Output</button>
+      <button id="clearHostsBtn">Clear Targets</button>
+      <button id="getUrlsBtn">getURLS</button>
+      <button id="getOutputBtn">Stream Output</button>
+      <button id="getHostsBtn">Scanned Targets</button>
+    </div>
+
+    <div class="results-section">
+      <h2>Scan Results</h2>
+      <pre id="results" class="results-container">
+        <p class="empty-state">No scan results yet</p>
+      </pre>
+    </div>
+  </div>
+  <script src="panel.js"></script>
+</body>
+</html>

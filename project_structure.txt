@@ -1,0 +1,58 @@
+BBOT-Scanner/
+│   ├── README.md
+│   ├── index.html
+│   ├── deploy.sh
+│   ├── background.js
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── panel.html
+│   ├── vite.config.js
+│   ├── manifest.json
+│   ├── .gitignore
+│   ├── panel.js
+│   ├── public/
+│   │   ├── assets/
+│   │   │   ├── logos/
+│   │   │   │   ├── bls_icon_dark.png
+│   │   │   │   ├── bls_icon_light.png
+│   │   │   ├── icons/
+│   │   │   │   ├── icon128.png
+│   │   │   │   ├── icon16.png
+│   │   │   │   ├── icon32.png
+│   │   │   │   ├── icon48.png
+│   │   │   ├── header/
+│   │   │   │   ├── black_lantern_logo_dark.svg
+│   │   │   │   ├── black_lantern_logo_light.svg
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   ├── styles.css
+│   │   ├── styles/
+│   │   │   ├── layouts/
+│   │   │   │   ├── classic.css
+│   │   │   │   ├── matrix.css
+│   │   │   │   ├── black-lantern.css
+│   │   │   │   ├── modern.css
+│   │   │   │   ├── midnight.css
+│   │   │   │   ├── compact.css
+│   │   │   ├── themes/
+│   │   │   │   ├── matrix.css
+│   │   │   │   ├── dark.css
+│   │   │   │   ├── black-lantern.css
+│   │   │   │   ├── light.css
+│   │   │   │   ├── midnight.css
+│   │   ├── assets/
+│   │   │   ├── logos/
+│   │   │   │   ├── bls_icon_dark.png
+│   │   │   │   ├── bls_icon_light.png
+│   │   │   ├── icons/
+│   │   │   │   ├── icon128.png
+│   │   │   │   ├── icon16.png
+│   │   │   │   ├── icon32.png
+│   │   │   │   ├── icon48.png
+│   │   │   ├── header/
+│   │   │   │   ├── black_lantern_logo_dark.svg
+│   │   │   │   ├── black_lantern_logo_light.svg
+│   ├── host/
+│   │   ├── bbot_host.json
+│   │   ├── bbot_host.py

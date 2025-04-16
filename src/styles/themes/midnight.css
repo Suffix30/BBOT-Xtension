@@ -1,0 +1,58 @@
+/* Midnight theme - Sleek dark design */
+.theme-midnight {
+  --bg-primary: #0A0E17;
+  --bg-secondary: #141B26;
+  --border-color: rgba(99, 102, 241, 0.2);
+  --text-primary: #fff;
+  --text-secondary: #94A3B8;
+  --accent-primary: #6366F1;
+  --accent-hover: #4F46E5;
+  --bls-icon: url('/assets/bls_icon_light.png');
+}
+
+.theme-midnight .app-container {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.theme-midnight .main-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-midnight .select-field,
+.theme-midnight .target-input {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-midnight .action-button {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-midnight .action-button:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.theme-midnight .action-button.scan-button {
+  background: var(--accent-primary);
+}
+
+.theme-midnight .action-button.scan-button:hover {
+  background: var(--accent-hover);
+}
+
+.theme-midnight .output-container {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-midnight .results-container,
+.theme-midnight .hosts-area {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}

@@ -1,0 +1,43 @@
+/* Compact Layout - Minimal design with collapsible sections */
+.layout-compact .app-container {
+  padding: 8px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.layout-compact .main-content {
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.layout-compact .settings-section {
+  gap: 8px;
+}
+
+.layout-compact .button-row {
+  gap: 4px;
+}
+
+.layout-compact .button-group {
+  grid-template-columns: 1fr;
+}
+
+.layout-compact .action-button {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.layout-compact .output-container {
+  margin-bottom: 8px;
+  border-radius: 12px;
+}
+
+.layout-compact .select-field {
+  height: 36px;
+  font-size: 13px;
+}

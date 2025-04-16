@@ -1,0 +1,65 @@
+/* Black Lantern theme */
+.theme-black-lantern {
+  --bg-primary: #0d0a1f;
+  --bg-secondary: #1a1240;
+  --text-primary: #ffffff;
+  --text-secondary: #b4b7c5;
+  --accent-primary: #6e2bff;
+  --accent-secondary: #5620cc;
+  --border-color: rgba(110, 43, 255, 0.2);
+  --bls-icon: url('/assets/bls_icon_light.png');
+}
+
+.theme-black-lantern.theme-light {
+  --bls-icon: url('/assets/bls_icon_dark.png');
+}
+
+.theme-black-lantern .app-container {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.theme-black-lantern .main-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-black-lantern .select-field,
+.theme-black-lantern .target-input {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-black-lantern .action-button {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.theme-black-lantern .action-button:hover {
+  background: var(--accent-secondary);
+}
+
+.theme-black-lantern .output-container {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-black-lantern .results-container,
+.theme-black-lantern .hosts-area {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-black-lantern .styles-button {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-black-lantern .styles-button:hover {
+  background: var(--accent-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}

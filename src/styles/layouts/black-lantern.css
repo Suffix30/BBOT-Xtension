@@ -1,0 +1,202 @@
+/* Black Lantern Layout - Inspired by Black Lantern Security */
+.layout-black-lantern .app-container {
+  background: linear-gradient(135deg, #1a1240 0%, #0d0a1f 100%);
+  padding: 24px;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.layout-black-lantern .app-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(110, 43, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(110, 43, 255, 0.1) 0%, transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.layout-black-lantern .header-content {
+  position: relative;
+  z-index: auto;
+}
+
+.layout-black-lantern .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.layout-black-lantern .header-logo {
+  height: 24px;
+  width: auto;
+  max-width: 180px;
+}
+
+.layout-black-lantern .main-content {
+  background: rgba(26, 18, 64, 0.6);
+  border: 1px solid rgba(110, 43, 255, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.2),
+    inset 0 0 20px rgba(110, 43, 255, 0.1);
+}
+
+.layout-black-lantern .target-input {
+  background: rgba(13, 10, 31, 0.8);
+  border: 1px solid rgba(110, 43, 255, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.layout-black-lantern .target-input:focus {
+  border-color: rgba(110, 43, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(110, 43, 255, 0.1);
+}
+
+.layout-black-lantern .select-field {
+  background: rgba(13, 10, 31, 0.8);
+  border: 1px solid rgba(110, 43, 255, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.layout-black-lantern .action-button {
+  background: rgba(110, 43, 255, 0.2);
+  border: 1px solid rgba(110, 43, 255, 0.3);
+  color: #fff;
+  border-radius: 8px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.layout-black-lantern .action-button:hover {
+  background: rgba(110, 43, 255, 0.3);
+  border-color: rgba(110, 43, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.layout-black-lantern .action-button.scan-button {
+  background: #6E2BFF;
+  border: none;
+}
+
+.layout-black-lantern .action-button.scan-button:hover {
+  background: #5620cc;
+  box-shadow: 0 0 20px rgba(110, 43, 255, 0.3);
+}
+
+.layout-black-lantern .output-container {
+  background: #1a124099;
+  border: 1px solid rgba(110, 43, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
+  transition: all 0.2s ease-in-out;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(110, 43, 255, 0.1);
+  position: relative;
+  z-index: auto;
+}
+
+.layout-black-lantern .output-container.collapsed {
+  flex: 0;
+  min-height: 44px;
+  max-height: 44px;
+}
+
+.layout-black-lantern .output-container h2 {
+  font-size: 16px;
+  margin: 0;
+  padding-bottom: 12px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.layout-black-lantern .output-container.collapsed h2 {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.layout-black-lantern .results-container,
+.layout-black-lantern .hosts-area {
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  background: #0d0a1fcc;
+  border: 1px solid rgba(110, 43, 255, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  transition: all 0.2s ease-in-out;
+  min-height: 0;
+  max-height: calc(100vh - 500px);
+  z-index: auto;
+  position: relative;
+}
+
+.layout-black-lantern .output-container.collapsed .results-container,
+.layout-black-lantern .output-container.collapsed .hosts-area {
+  height: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0;
+}
+
+.layout-black-lantern .results-container::before,
+.layout-black-lantern .hosts-area::before {
+  display: block;
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 150px;
+  height: 150px;
+  margin: auto;
+  background-image: var(--current-icon);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.layout-black-lantern .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.layout-black-lantern .header-logo {
+  height: 24px;
+  max-width: 180px;
+}

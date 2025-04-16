@@ -1,0 +1,189 @@
+/* Matrix Layout - Cyberpunk terminal style */
+.layout-matrix .app-container {
+  padding: 16px;
+  font-family: 'Courier New', monospace;
+  z-index: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.95)),
+              repeating-linear-gradient(0deg, 
+                rgba(0, 255, 0, 0.1) 0px,
+                rgba(0, 255, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px);
+  text-shadow: 0 0 8px #0f0;
+  position: relative;
+}
+
+.layout-matrix .app-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, 
+    rgba(0, 255, 0, 0.1) 0%,
+    transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.layout-matrix .app-container > * {
+  position: relative;
+  z-index: auto;
+}
+
+.layout-matrix .main-content {
+  background: rgba(0, 20, 0, 0.8);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2),
+              inset 0 0 20px rgba(0, 255, 0, 0.1);
+  border-radius: 0;
+  z-index: 1;
+  transform: perspective(1000px) translateZ(0);
+  transition: transform 0.3s ease;
+}
+
+.layout-matrix .main-content:hover {
+  transform: perspective(1000px) translateZ(10px);
+}
+
+.layout-matrix .select-field,
+.layout-matrix .target-input {
+  background: rgba(0, 10, 0, 0.9);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  border-radius: 0;
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.1),
+              inset 0 0 10px rgba(0, 255, 0, 0.05);
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.layout-matrix .select-field:focus,
+.layout-matrix .target-input:focus {
+  border-color: #0f0;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2),
+              inset 0 0 15px rgba(0, 255, 0, 0.1);
+}
+
+.layout-matrix .select-field option {
+  background: #000;
+  color: #0f0;
+}
+
+.layout-matrix .action-button {
+  background: rgba(0, 40, 0, 0.9);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  color: #0f0;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.1),
+              inset 0 0 10px rgba(0, 255, 0, 0.05);
+  transform: translateZ(0);
+  transition: all 0.3s ease;
+  border-radius: 0;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.layout-matrix .action-button:hover {
+  background: rgba(0, 60, 0, 0.9);
+  border-color: #0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2),
+              inset 0 0 15px rgba(0, 255, 0, 0.1);
+}
+
+.layout-matrix .action-button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(0, 255, 0, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: matrix-scan 2s linear infinite;
+}
+
+@keyframes matrix-scan {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+.layout-matrix .output-container {
+  background: rgba(0, 20, 0, 0.8);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  border-radius: 0;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2),
+              inset 0 0 20px rgba(0, 255, 0, 0.1);
+  transform: perspective(1000px) translateZ(0);
+  z-index: auto;
+  transition: transform 0.3s ease;
+}
+
+.layout-matrix .results-container,
+.layout-matrix .hosts-area {
+  background: rgba(0, 10, 0, 0.9);
+  border: 1px solid #0f0;
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  border-radius: 0;
+  z-index: auto;
+}
+
+.layout-matrix h1,
+.layout-matrix h2,
+.layout-matrix label {
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+}
+
+.layout-matrix .accordion-trigger {
+  border: 1px solid #0f0;
+  background: rgba(0, 20, 0, 0.8);
+  z-index: 1;
+}
+
+.layout-matrix .accordion-content {
+  background: rgba(0, 10, 0, 0.9);
+  border-top: 1px solid #0f0;
+  z-index: 1;
+}
+
+.layout-matrix input[type="checkbox"] {
+  accent-color: #0f0;
+}
+
+.layout-matrix .styles-button {
+  background: rgba(0, 40, 0, 0.9);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  color: #0f0;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.1),
+              inset 0 0 10px rgba(0, 255, 0, 0.05);
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  border-radius: 0;
+}
+
+.layout-matrix .styles-button:hover {
+  background: rgba(0, 60, 0, 0.9);
+  border-color: #0f0;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2),
+              inset 0 0 15px rgba(0, 255, 0, 0.1);
+}

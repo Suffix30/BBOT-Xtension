@@ -1,0 +1,9 @@
+{
+  "name": "bbot_host",
+  "description": "Native messaging host for BBOT Firefox extension",
+  "path": "USER/host/bbot_host.py",
+  "type": "stdio",
+  "allowed_extensions": [
+    "bbot-scan@example.org"
+  ]
+}

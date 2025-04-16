@@ -1,0 +1,59 @@
+/* Dark theme - Cyberpunk inspired */
+.theme-dark {
+  --bg-primary: #0a0a1f;
+  --bg-secondary: #1a1a3a;
+  --border-color: #2a2a5a;
+  --text-primary: #00ff9d;
+  --text-secondary: #66ffb2;
+  --accent-primary: #ff3e3e;
+  --accent-secondary: #ff7070;
+  --button-hover: #ff5252;
+  --bls-icon: url('/assets/bls_icon_light.png');
+}
+
+.theme-dark .app-container {
+  background: var(--bg-primary);
+}
+
+.theme-dark .main-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-dark .action-button {
+  background: var(--accent-primary);
+}
+
+.theme-dark .action-button:hover {
+  background: var(--button-hover);
+}
+
+.theme-dark .action-button.scan-button {
+  background: var(--accent-secondary);
+}
+
+.theme-dark .select-field,
+.theme-dark .target-input {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-dark .results-container,
+.theme-dark .hosts-area {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-dark .styles-button {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+  border: none;
+  text-shadow: 0 0 10px rgba(255, 62, 62, 0.5);
+}
+
+.theme-dark .styles-button:hover {
+  background: var(--button-hover);
+  box-shadow: 0 0 15px rgba(255, 62, 62, 0.3);
+}

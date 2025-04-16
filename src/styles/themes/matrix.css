@@ -1,0 +1,119 @@
+/* Matrix theme - Cyberpunk terminal inspired */
+.theme-matrix {
+  --matrix-green: #00ff00;
+  --matrix-dark: #000800;
+  --matrix-glow: 0 0 15px rgba(0, 255, 0, 0.3);
+  --matrix-text-glow: 0 0 8px rgba(0, 255, 0, 0.5);
+  --matrix-border: rgba(0, 255, 0, 0.5);
+  --matrix-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+  --matrix-inset: inset 0 0 20px rgba(0, 255, 0, 0.1);
+  --bls-icon: url('/assets/bls_icon_light.png');
+}
+
+.theme-matrix .app-container {
+  background: var(--matrix-dark);
+  color: var(--matrix-green);
+  position: relative;
+}
+
+.theme-matrix .app-container::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at center, 
+      rgba(0, 255, 0, 0.03) 0%,
+      transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.theme-matrix .main-content,
+.theme-matrix .output-container {
+  background: rgba(0, 20, 0, 0.8);
+  border: 1px solid var(--matrix-border);
+  box-shadow: var(--matrix-shadow),
+              var(--matrix-inset);
+  backdrop-filter: blur(5px);
+  transform: translateZ(0);
+  transition: all 0.3s ease;
+}
+
+.theme-matrix .action-button {
+  background: rgba(0, 40, 0, 0.9);
+  border: 1px solid var(--matrix-border);
+  color: var(--matrix-green);
+  text-shadow: var(--matrix-text-glow);
+  box-shadow: var(--matrix-shadow),
+              var(--matrix-inset);
+  transform: translateZ(0);
+  transition: all 0.3s ease;
+}
+
+.theme-matrix .action-button:hover {
+  background: rgba(0, 60, 0, 0.9);
+  border-color: var(--matrix-green);
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.3),
+              inset 0 0 25px rgba(0, 255, 0, 0.2);
+}
+
+.theme-matrix .select-field,
+.theme-matrix .target-input {
+  background: rgba(0, 10, 0, 0.9);
+  border: 1px solid var(--matrix-border);
+  color: var(--matrix-green);
+  box-shadow: var(--matrix-shadow),
+              var(--matrix-inset);
+  transition: all 0.3s ease;
+}
+
+.theme-matrix .select-field:focus,
+.theme-matrix .target-input:focus {
+  border-color: var(--matrix-green);
+  box-shadow: 0 0 25px rgba(0, 255, 0, 0.3),
+              inset 0 0 25px rgba(0, 255, 0, 0.2);
+}
+
+.theme-matrix .results-container,
+.theme-matrix .hosts-area {
+  background: rgba(0, 10, 0, 0.9);
+  border: 1px solid var(--matrix-border);
+  color: var(--matrix-green);
+  box-shadow: var(--matrix-shadow),
+              var(--matrix-inset);
+}
+
+.theme-matrix h1,
+.theme-matrix h2,
+.theme-matrix label {
+  color: var(--matrix-green);
+  text-shadow: var(--matrix-text-glow);
+}
+
+.theme-matrix input[type="checkbox"] {
+  accent-color: #0f0;
+}
+
+/* Style the button regardless of layout */
+.theme-matrix .styles-button {
+  background: rgba(0, 40, 0, 0.9);
+  border: 1px solid rgba(0, 255, 0, 0.5);
+  color: #0f0;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.1),
+              inset 0 0 10px rgba(0, 255, 0, 0.05);
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  border-radius: 0;
+}
+
+.theme-matrix .styles-button:hover {
+  background: rgba(0, 60, 0, 0.9);
+  border-color: #0f0;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2),
+              inset 0 0 15px rgba(0, 255, 0, 0.1);
+}
