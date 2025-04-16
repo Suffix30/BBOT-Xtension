@@ -2,6 +2,15 @@
 
 A Firefox extension that provides a user interface for the BBOT (Bug Bounty Recon Tool) scanner. This extension allows you to run various security scans directly from your browser with a sleek, customizable interface.
 
+## Screenshots
+
+The following images showcase the BBOT Scanner Firefox Extension's user interface, including theme selection, deployment, and extension view:
+<div style="display: flex; justify-content: space-between; gap: 10px;">
+  <img src="src/assets/bls-theme-preview/view-Xtension.png" alt="Deploy Button" width="30%">
+  <img src="src/assets/bls-theme-preview/style-selection.png" alt="Style Selection" width="30%">
+  <img src="src/assets/bls-theme-preview/press_deploy.png" alt="Extension View" width="30%">
+</div>
+
 ## Features
 
 - Multiple scan types including:
