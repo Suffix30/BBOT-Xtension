@@ -132,6 +132,12 @@ npm run dev
 npm run preview
 ```
 
+### Running Tests
+
+```bash
+npm test
+```
+
 ## Themes and Layouts
 
 The extension supports multiple themes and layouts that can be changed via the Styles button in the UI. Each theme/layout combination provides a unique visual experience while maintaining full functionality.
