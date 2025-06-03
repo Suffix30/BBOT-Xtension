@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --emptyOutDir && cd dist && web-ext build --artifacts-dir .. --filename bbot-scanner.xpi --overwrite-dest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "pytest"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.1.2",
