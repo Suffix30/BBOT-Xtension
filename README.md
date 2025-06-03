@@ -66,7 +66,7 @@ The following images showcase the BBOT Scanner Firefox Extension's user interfac
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd bbot-scanner
+cd BBOT-Xtension
 ```
 
 2. Install dependencies:
@@ -78,7 +78,7 @@ npm install
 ```bash
 npm run build
 ```
-This will create a `bbot-scanner.xpi` file in the project root.
+This will create a `bbot-scanner.xpi` file in the `BBOT-Xtension/` project root.
 
 ### Loading in Firefox
 
