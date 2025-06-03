@@ -98,8 +98,6 @@ This will create a `bbot-scanner.xpi` file in the `BBOT-Xtension/` project root.
 │   │   └── layouts/         # Layout-specific styles
 │   ├── App.jsx              # Main React component
 │   └── main.jsx             # React entry point
-├── build.bat                 # Windows build script
-├── build.sh                  # Unix build script
 ├── deploy.sh                # Deployment script
 └── manifest.json            # Extension manifest
 ```
@@ -112,7 +110,14 @@ The extension communicates with BBOT through a Python-based native messaging hos
 - Streams real-time results
 - Saves scan outputs locally
 
+The path to the deployment script can be customized by setting `deployScriptPath`
+in the extension's storage. If no path is configured, the background script runs
+the bundled `deploy.sh` located in the extension directory.
+
 ## Development
+
+Ensure that each text-based source file ends with a trailing newline. This avoids
+editor warnings and keeps the project POSIX compliant.
 
 ### Building
 
@@ -151,7 +156,7 @@ The extension supports multiple themes and layouts that can be changed via the S
 
 ## License
 
-[Add License Information]
+This project is licensed under the [MIT License](LICENSE).
 
 ## Credits
 

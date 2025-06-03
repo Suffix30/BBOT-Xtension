@@ -1,4 +1,4 @@
-// Toggle sidebar when toolbar button is clicked
+
 browser.browserAction.onClicked.addListener(() => {
     browser.sidebarAction.toggle();
   });
@@ -83,9 +83,12 @@ browser.browserAction.onClicked.addListener(() => {
               script: `cd ${msg.cwd || '.'} && ${msg.command}`
           });
       } else if (msg.type === "deployBbot") {
-          port.postMessage({
-              command: "shell",
-              script: "cd /home/net/Desktop/BBOT-Grok-1 && chmod +x deploy.sh && ./deploy.sh"
+          browser.storage.local.get('deployScriptPath').then(result => {
+              const deployDir = result.deployScriptPath || '.';
+              port.postMessage({
+                  command: "shell",
+                  script: `cd "${deployDir}" && chmod +x deploy.sh && ./deploy.sh`
+              });
           });
       }
   
@@ -145,3 +148,4 @@ browser.browserAction.onClicked.addListener(() => {
           }
       }
   });
+  
