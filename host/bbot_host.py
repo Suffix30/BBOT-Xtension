@@ -94,7 +94,7 @@ def run_scan(target, scantype, deadly, eventtype, moddep, flagtype, burp, viewty
             bbot_process.wait()
 
         bbot_process = None
-        send_message({"type": "info", "data": f"Scan completed. Output saved to {output_file}"})
+        send_message({"type": "info", "data": f"Scan completed. Output saved to {output_path}"})
     except Exception as e:
         send_message({"type": "error", "data": f"Scan failed: {str(e)}"})
 
