@@ -69,9 +69,9 @@ def run_scan(target, scantype, deadly, eventtype, moddep, flagtype, burp, viewty
         cmd.append("--allow-deadly")
         cmd.insert(0, "pkexec")
 
-    output_file = f"{target}_output.txt"
+    output_path = f"{target}_output.txt"
     try:
-        with open(output_file, "w", encoding="utf-8") as output_file:
+        with open(output_path, "w", encoding="utf-8") as output_file:
             bbot_process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
