@@ -369,17 +369,30 @@ function App() {
 
           <select id="scanSelect" className="select-field">
             <option value="baddns-thorough">BAD DNS Thorough</option>
+            <option value="baddns-intense">BAD DNS Intense</option>
             <option value="cloud-enum">Cloud Enumeration</option>
             <option value="code-enum">Code Enumeration</option>
             <option value="dirbust-heavy">Directory Brute-force (Heavy)</option>
             <option value="dirbust-light">Directory Brute-force (Light)</option>
             <option value="dotnet-audit">.NET/IIS Audit</option>
             <option value="email-enum">Email Enumeration</option>
+            <option value="fast">Fast Scan</option>
             <option value="iis-shortnames">IIS Shortname Enumeration</option>
             <option value="kitchen-sink">Kitchen Sink (All Modules)</option>
+            <option value="lightfuzz-heavy">Lightfuzz Heavy</option>
+            <option value="lightfuzz-light">Lightfuzz Light</option>
+            <option value="lightfuzz-medium">Lightfuzz Medium</option>
+            <option value="lightfuzz-superheavy">Lightfuzz Superheavy</option>
+            <option value="lightfuzz-xss">Lightfuzz XSS</option>
+            <option value="nuclei">Nuclei</option>
+            <option value="nuclei-budget">Nuclei Budget</option>
+            <option value="nuclei-intense">Nuclei Intense</option>
+            <option value="nuclei-technology">Nuclei Technology</option>
             <option value="paramminer">Parameter Brute-force</option>
             <option value="spider">Web Spider</option>
+            <option value="spider-intense">Web Spider Intense</option>
             <option value="subdomain-enum">Subdomain Enumeration</option>
+            <option value="tech-detect">Technology Detection</option>
             <option value="web-basic">Basic Web Scan</option>
             <option value="web-screenshots">Web Screenshot Capture</option>
             <option value="web-thorough">Thorough Web Scan</option>
