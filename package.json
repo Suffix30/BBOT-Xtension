@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "vite",
-    "build": "node_modules/.bin/vite build --emptyOutDir && cd dist && node_modules/.bin/web-ext build --artifacts-dir .. --filename bbot-scanner.xpi --overwrite-dest",
+    "build": "node_modules/.bin/vite build --emptyOutDir && cd dist && ../node_modules/.bin/web-ext build --artifacts-dir .. --filename bbot-scanner.xpi --overwrite-dest",
     "preview": "vite preview",
     "test": "pytest"
   },
