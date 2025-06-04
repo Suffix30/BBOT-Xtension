@@ -1,2 +1,4 @@
-node_modules
+node_modules/
 bbot-scanner.xpi
+dist/
+.pytest_cache/
