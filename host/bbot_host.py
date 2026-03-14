@@ -10,6 +10,7 @@ import urllib.error
 import urllib.request
 
 bbot_process = None
+scan_terminated = False
 ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 VALID_DEP_OPTIONS = {
     "--ignore-failed-deps",
@@ -289,7 +290,7 @@ def emit_current_preset(cmd):
 
 
 def run_scan(target, scantype, deadly, eventtype, moddep, flagtype, burp, viewtype, scope):
-    global bbot_process
+    global bbot_process, scan_terminated
 
     target = str(target or "").strip()
     scantype = str(scantype or "").strip()
@@ -316,6 +317,7 @@ def run_scan(target, scantype, deadly, eventtype, moddep, flagtype, burp, viewty
             send_message({"type": "info", "data": "Current preset loaded."})
             return
 
+        scan_terminated = False
         with open(output_path, "w", encoding="utf-8") as output_file:
             bbot_process = subprocess.Popen(
                 cmd,
@@ -328,19 +330,25 @@ def run_scan(target, scantype, deadly, eventtype, moddep, flagtype, burp, viewty
 
             returncode = stream_process(bbot_process, output_file)
 
+        was_terminated = scan_terminated
         bbot_process = None
+        scan_terminated = False
         if returncode == 0:
             send_message({"type": "info", "data": f"Scan completed. Output saved to {output_path}"})
+        elif was_terminated:
+            return
         else:
             send_message({"type": "error", "data": f"Scan failed with exit code {returncode}"})
     except Exception as e:
         bbot_process = None
+        scan_terminated = False
         send_message({"type": "error", "data": f"Scan failed: {str(e)}"})
 
 
 def kill_scan():
-    global bbot_process
+    global bbot_process, scan_terminated
     if bbot_process and bbot_process.poll() is None:
+        scan_terminated = True
         bbot_process.terminate()
         bbot_process.wait()
         bbot_process = None
