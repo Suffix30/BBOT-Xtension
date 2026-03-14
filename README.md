@@ -28,6 +28,8 @@ The following images showcase the BBOT Scanner Firefox Extension's user interfac
   - Web Scanning (Basic/Thorough)
   - And more...
 
+- Multi-target scans with one target per line
+- Add recent domains from browser history into the target list
 - Real-time scan output streaming
 - Customizable UI themes:
   - Default
@@ -50,8 +52,15 @@ The following images showcase the BBOT Scanner Firefox Extension's user interfac
   - Event type filtering
   - Module dependency management
   - Burp proxy integration
-  - Scope control
   - Flag type selection
+  - Strict scope
+  - Whitelist targets
+  - Blacklist targets
+
+- Split sidebar controls for smaller layouts:
+  - Settings
+  - Scan Controls
+  - Actions
 
 ## Installation
 
@@ -102,6 +111,9 @@ This will create a `bbot-scanner.xpi` file in the `BBOT-Xtension/` project root.
 - If BBOT is installed but out of date, the panel shows `Update BBOT`.
 - If BBOT is current, the button is hidden.
 - Presets, flags, and event types are loaded from the installed BBOT runtime.
+- Targets can be entered one per line to run a scan against multiple targets.
+- Scope options are available through `Whitelist`, `Blacklist`, and `Strict Scope`.
+- The sidebar is split into `Settings`, `Scan Controls`, and `Actions` so the main scan inputs stay reachable in narrow Firefox sidebars.
 
 ## Project Structure
 
