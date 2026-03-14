@@ -49,35 +49,10 @@
 
 .layout-modern .output-container {
   transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
   background: rgba(22, 27, 34, 0.8);
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  min-height: 44px;
-  max-height: 100%;
-  margin: 0;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.layout-modern .output-container.collapsed {
-  height: 44px;
-  min-height: 44px;
-  max-height: 44px;
-  flex: 0;
-  overflow: hidden;
-}
-
-.layout-modern .output-container.collapsed .results-container,
-.layout-modern .output-container.collapsed .hosts-area {
-  height: 0;
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
 }
 
 .layout-modern .output-container h2 {
@@ -96,14 +71,6 @@
 .layout-modern .results-container,
 .layout-modern .hosts-area {
   transition: all 0.3s ease;
-  flex: 1;
-  min-height: 0;
-  max-height: calc(100vh - 500px);
   background: rgba(13, 17, 23, 0.8);
   border-radius: 6px;
-  padding: 12px;
-  margin-top: 12px;
-  overflow: auto;
-  width: 100%;
-  box-sizing: border-box;
 }

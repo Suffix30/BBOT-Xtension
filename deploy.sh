@@ -1,47 +1,68 @@
 #!/bin/bash
+set -euo pipefail
 
-[ -d "$HOME/.mozilla/native-messaging-hosts" ] || mkdir -p "$HOME/.mozilla/native-messaging-hosts" || {
-  echo "Failed to create directory $HOME/.mozilla/native-messaging-hosts"
+ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+HOST_DIR="$ROOT_DIR/host"
+HOST_SCRIPT="$HOST_DIR/bbot_host.py"
+HOST_MANIFEST_TEMPLATE="$HOST_DIR/bbot_host.json"
+HOST_MANIFEST_DIR="$HOME/.mozilla/native-messaging-hosts"
+HOST_MANIFEST_TARGET="$HOST_MANIFEST_DIR/bbot_host.json"
+PATH_EXPORT='export PATH="$HOME/.local/bin:$PATH"'
+
+[ -f "$HOST_SCRIPT" ] || {
+  echo "Missing native host script at $HOST_SCRIPT"
   exit 1
 }
 
-sed "s|\USER|$(pwd)|g" ./host/bbot_host.json > ./host/bbot_host_temp.json && \
-mv ./host/bbot_host_temp.json ~/.mozilla/native-messaging-hosts/bbot_host.json || {
-  echo "Failed to process or copy bbot_host.json"
+[ -f "$HOST_MANIFEST_TEMPLATE" ] || {
+  echo "Missing native host manifest template at $HOST_MANIFEST_TEMPLATE"
   exit 1
 }
 
-chmod +x ./host/bbot_host.py || {
-  echo "Failed to make bbot_host.py executable"
+[ -d "$HOST_MANIFEST_DIR" ] || mkdir -p "$HOST_MANIFEST_DIR" || {
+  echo "Failed to create directory $HOST_MANIFEST_DIR"
   exit 1
 }
 
-# Detect the user's shell
-SHELL_TYPE=$(basename "$SHELL")
-CONFIG_FILE=""
-if [ "$SHELL_TYPE" = "bash" ]; then
-  CONFIG_FILE="$HOME/.bashrc"
-elif [ "$SHELL_TYPE" = "zsh" ]; then
-  CONFIG_FILE="$HOME/.zshrc"
-else
-  echo "Unsupported shell: $SHELL_TYPE. Please manually add ~/.local/bin to your PATH."
-  CONFIG_FILE="$HOME/.bashrc"
-fi
+python3 - "$HOST_MANIFEST_TEMPLATE" "$HOST_MANIFEST_TARGET" "$ROOT_DIR" <<'PY'
+import pathlib
+import sys
 
-# Check if ~/.local/bin is already in the PATH in the config file
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$CONFIG_FILE"; then
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$CONFIG_FILE"
-  echo "Added ~/.local/bin to PATH in $CONFIG_FILE"
-else
-  echo "~/.local/bin is already in PATH in $CONFIG_FILE"
-fi
+template_path = pathlib.Path(sys.argv[1])
+target_path = pathlib.Path(sys.argv[2])
+root_dir = sys.argv[3]
 
-# Source the config file to apply the change in the current session
-source "$CONFIG_FILE" || {
-  echo "Failed to source $CONFIG_FILE. You may need to restart your terminal."
+template = template_path.read_text(encoding="utf-8")
+target_path.write_text(template.replace("USER", root_dir), encoding="utf-8")
+PY
+
+python3 - "$HOST_SCRIPT" <<'PY'
+import pathlib
+import sys
+
+host_script = pathlib.Path(sys.argv[1])
+host_script.write_text(
+    host_script.read_text(encoding="utf-8").replace("\r\n", "\n"),
+    encoding="utf-8",
+    newline="\n",
+)
+PY
+
+chmod +x "$HOST_SCRIPT" || {
+  echo "Failed to make $HOST_SCRIPT executable"
+  exit 1
 }
 
-if ! command -v pipx >/dev/null 2>&1; then
+for config_file in "$HOME/.profile" "$HOME/.bashrc" "$HOME/.zshrc"; do
+  [ -f "$config_file" ] || touch "$config_file"
+  if ! grep -Fqx "$PATH_EXPORT" "$config_file"; then
+    printf '%s\n' "$PATH_EXPORT" >> "$config_file"
+  fi
+done
+
+export PATH="$HOME/.local/bin:$PATH"
+
+if ! command -v pipx >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/pipx" ]; then
   echo "pipx not found, installing it for user without sudo..."
   python3 -m pip install --user pipx --break-system-packages || {
     echo "Failed to install pipx. Ensure python3-pip is installed and try again."
@@ -49,9 +70,28 @@ if ! command -v pipx >/dev/null 2>&1; then
   }
 fi
 
-"$HOME/.local/bin/pipx" install bbot || {
-  echo "Failed to install bbot with pipx"
-  exit 1
-}
+PIPX_BIN="$(command -v pipx || true)"
+[ -n "$PIPX_BIN" ] || PIPX_BIN="$HOME/.local/bin/pipx"
 
+if command -v bbot >/dev/null 2>&1 || [ -x "$HOME/.local/bin/bbot" ]; then
+  if "$PIPX_BIN" upgrade bbot; then
+    echo "BBOT updated."
+  elif "$PIPX_BIN" install bbot; then
+    echo "BBOT installed."
+  else
+    echo "Failed to install or update bbot with pipx"
+    exit 1
+  fi
+else
+  if "$PIPX_BIN" install bbot; then
+    echo "BBOT installed."
+  elif "$PIPX_BIN" upgrade bbot; then
+    echo "BBOT updated."
+  else
+    echo "Failed to install or update bbot with pipx"
+    exit 1
+  fi
+fi
+
+echo "Native host registered from $ROOT_DIR"
 echo "Deployment successful!"

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState, useEffect, useCallback } from 'react'
 import * as Accordion from '@radix-ui/react-accordion'
-import { ChevronDown, Shield, Scan, Terminal, Target, Database, FileSearch, Trash2, Play, Download, XCircle } from 'lucide-react'
+import { ChevronDown, Shield, Terminal, Target, Database, FileSearch, Trash2, Play, Download, XCircle } from 'lucide-react'
 import clsx from 'clsx'
 import './styles.css'
 import './styles/layouts/compact.css'
@@ -15,6 +15,66 @@ import './styles/themes/light.css'
 import './styles/themes/matrix.css'
 import './styles/themes/midnight.css'
 import './styles/themes/black-lantern.css'
+import './styles/layouts/shared.css'
+
+const DEFAULT_EVENT_TYPES = [
+  'ASN',
+  'AZURE_TENANT',
+  'CODE_REPOSITORY',
+  'DNS_NAME',
+  'DNS_NAME_UNRESOLVED',
+  'EMAIL_ADDRESS',
+  'FILESYSTEM',
+  'FINDING',
+  'GEOLOCATION',
+  'HASHED_PASSWORD',
+  'HTTP_RESPONSE',
+  'IP_ADDRESS',
+  'IP_RANGE',
+  'MOBILE_APP',
+  'OPEN_TCP_PORT',
+  'ORG_STUB',
+  'PASSWORD',
+  'PROTOCOL',
+  'RAW_DNS_RECORD',
+  'RAW_TEXT',
+  'SOCIAL',
+  'STORAGE_BUCKET',
+  'TECHNOLOGY',
+  'URL',
+  'URL_HINT',
+  'URL_UNVERIFIED',
+  'USERNAME',
+  'VHOST',
+  'VULNERABILITY',
+  'WAF',
+  'WEBSCREENSHOT',
+  'WEB_PARAMETER'
+]
+
+const DEFAULT_ENVIRONMENT_STATE = {
+  hostConfigured: null,
+  hostError: '',
+  bbotInstalled: false,
+  bbotPath: '',
+  installedVersion: '',
+  latestVersion: '',
+  updateAvailable: false,
+  status: 'checking',
+  message: 'Checking BBOT status...',
+  capabilitiesLoaded: false,
+  presets: [],
+  flags: [],
+  eventTypes: DEFAULT_EVENT_TYPES
+}
+
+const MODULE_DEP_OPTIONS = [
+  { value: '--ignore-failed-deps', label: 'Ignore Failed Deps' },
+  { value: '--no-deps', label: "Don't install deps." },
+  { value: '--force-deps', label: 'Force' },
+  { value: '--retry-deps', label: 'Retry Deps' },
+  { value: '--install-all-deps', label: 'Install All' }
+]
 
 function App() {
   const [target, setTarget] = useState('')
@@ -26,7 +86,6 @@ function App() {
   const [currentLayout, setCurrentLayout] = useState('default')
   const [showThemeMenu, setShowThemeMenu] = useState(false)
   const [currentTheme, setCurrentTheme] = useState('default')
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [isOutputCollapsed, setIsOutputCollapsed] = useState(false)
   const [isTargetsCollapsed, setIsTargetsCollapsed] = useState(false)
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false)
@@ -35,91 +94,177 @@ function App() {
   const [activeTab, setActiveTab] = useState('raw')
   const [recentDomains, setRecentDomains] = useState([])
   const [subdomainFiles, setSubdomainFiles] = useState([])
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(1)
+  const [environmentState, setEnvironmentState] = useState(DEFAULT_ENVIRONMENT_STATE)
+  const [selectedPreset, setSelectedPreset] = useState('')
+  const [selectedEventType, setSelectedEventType] = useState('*')
+  const [selectedFlag, setSelectedFlag] = useState('')
+  const [moduleDep, setModuleDep] = useState('--ignore-failed-deps')
+  const [allowDeadly, setAllowDeadly] = useState(false)
+  const [useBurp, setUseBurp] = useState(false)
+  const [viewPreset, setViewPreset] = useState(false)
+  const [strictScope, setStrictScope] = useState(false)
+
+  const applyEnvironmentState = useCallback((data) => {
+    if (!data) {
+      return
+    }
+
+    setEnvironmentState((previous) => ({
+      ...previous,
+      ...data,
+      presets: Array.isArray(data.presets) ? data.presets : previous.presets,
+      flags: Array.isArray(data.flags) ? data.flags : previous.flags,
+      eventTypes: Array.isArray(data.eventTypes) && data.eventTypes.length > 0 ? data.eventTypes : previous.eventTypes
+    }))
+  }, [])
 
   const handleZoom = useCallback((delta) => {
-    setZoom(prev => Math.min(Math.max(prev + delta, 0.5), 2));
-  }, []);
+    setZoom((previous) => Math.min(Math.max(previous + delta, 0.5), 2))
+  }, [])
+
+  const sendMessage = useCallback((type, additionalData = {}) => {
+    if (typeof browser === 'undefined' || !browser.runtime) {
+      return Promise.resolve(null)
+    }
+    return browser.runtime.sendMessage({ type, ...additionalData }).catch(() => null)
+  }, [])
 
   useEffect(() => {
-    const handleWheel = (e) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        handleZoom(delta);
+    const handleWheel = (event) => {
+      if (event.ctrlKey) {
+        event.preventDefault()
+        const delta = event.deltaY > 0 ? -0.1 : 0.1
+        handleZoom(delta)
       }
-    };
+    }
 
-    const handleKeyboard = (e) => {
-      if (e.ctrlKey) {
-        if (e.key === '=' || e.key === '+') {
-          e.preventDefault();
-          handleZoom(0.1);
-        } else if (e.key === '-') {
-          e.preventDefault();
-          handleZoom(-0.1);
+    const handleKeyboard = (event) => {
+      if (event.ctrlKey) {
+        if (event.key === '=' || event.key === '+') {
+          event.preventDefault()
+          handleZoom(0.1)
+        } else if (event.key === '-') {
+          event.preventDefault()
+          handleZoom(-0.1)
         }
       }
-    };
+    }
 
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('keydown', handleKeyboard);
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    window.addEventListener('keydown', handleKeyboard)
 
     return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('keydown', handleKeyboard);
-    };
-  }, [handleZoom]);
+      window.removeEventListener('wheel', handleWheel)
+      window.removeEventListener('keydown', handleKeyboard)
+    }
+  }, [handleZoom])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--zoom-level', zoom)
   }, [zoom])
 
-  // Fetch recent domains from browser history
   useEffect(() => {
     const fetchRecentDomains = async () => {
       try {
         if (typeof browser !== 'undefined' && browser.history) {
-          const historyItems = await browser.history.search({ text: "", maxResults: 15 });
-          const uniqueDomains = new Set();
-          historyItems.forEach(item => {
+          const historyItems = await browser.history.search({ text: '', maxResults: 15 })
+          const uniqueDomains = new Set()
+          historyItems.forEach((item) => {
             try {
-              const urlObj = new URL(item.url);
-              uniqueDomains.add(urlObj.hostname);
-            } catch (e) {
-              console.error("Invalid URL:", item.url);
+              const urlObject = new URL(item.url)
+              uniqueDomains.add(urlObject.hostname)
+            } catch (error) {
+              console.error('Invalid URL:', item.url)
             }
-          });
-          setRecentDomains([...uniqueDomains]);
+          })
+          setRecentDomains([...uniqueDomains])
         }
       } catch (error) {
-        console.error("Error fetching history:", error);
+        console.error('Error fetching history:', error)
       }
-    };
-    fetchRecentDomains();
-  }, []);
-
-  // Fetch outfiles to populate the getSubdomains dropdown
-  useEffect(() => {
-    if (typeof browser !== 'undefined' && browser.runtime) {
-      browser.runtime.sendMessage({ type: "getOutfile" });
-      browser.runtime.onMessage.addListener((message) => {
-        if (message.type === "updateOutfiles") {
-          const outfiles = message.data.split('\n').filter(line => line && !line.startsWith('Extracted Outfile:'));
-          setSubdomainFiles(outfiles);
-        }
-      });
     }
-  }, []);
+
+    fetchRecentDomains()
+  }, [])
+
+  useEffect(() => {
+    if (typeof browser !== 'undefined' && browser.storage && browser.storage.local) {
+      browser.storage.local.get(['lastScan']).then((result) => {
+        if (result.lastScan) {
+          setScanResults(result.lastScan)
+        }
+      }).catch((error) => {
+        console.error('Failed to access browser.storage.local:', error)
+      })
+    }
+
+    if (typeof browser === 'undefined' || !browser.runtime) {
+      return undefined
+    }
+
+    const listener = (message) => {
+      if (message.type === 'updateOutput') {
+        setScanResults(message.data)
+      } else if (message.type === 'updateURLs') {
+        setUrlsOutput(message.data)
+      } else if (message.type === 'updateOutfiles') {
+        setOutfilesOutput(message.data)
+        const outfiles = message.data.split('\n').filter((line) => line && !line.startsWith('Extracted Outfile:'))
+        setSubdomainFiles(outfiles)
+      } else if (message.type === 'updateSubdomains') {
+        setSubdomainsOutput(message.data)
+      } else if (message.type === 'updateHosts') {
+        setHosts(message.data)
+      } else if (message.type === 'environmentStateUpdated') {
+        applyEnvironmentState(message.data)
+      }
+    }
+
+    browser.runtime.onMessage.addListener(listener)
+
+    browser.runtime.sendMessage({ type: 'getEnvironmentState' }).then((state) => {
+      applyEnvironmentState(state)
+    }).catch(() => {})
+
+    browser.runtime.sendMessage({ type: 'refreshEnvironmentState' }).then((state) => {
+      applyEnvironmentState(state)
+    }).catch(() => {})
+
+    browser.runtime.sendMessage({ type: 'getOutfile' }).catch(() => {})
+
+    return () => {
+      browser.runtime.onMessage.removeListener?.(listener)
+    }
+  }, [applyEnvironmentState])
+
+  useEffect(() => {
+    if (environmentState.presets.length > 0 && !environmentState.presets.includes(selectedPreset)) {
+      setSelectedPreset(environmentState.presets[0])
+    }
+  }, [environmentState.presets, selectedPreset])
+
+  useEffect(() => {
+    if (selectedFlag && !environmentState.flags.includes(selectedFlag)) {
+      setSelectedFlag('')
+    }
+  }, [environmentState.flags, selectedFlag])
+
+  useEffect(() => {
+    if (selectedEventType !== '*' && !environmentState.eventTypes.includes(selectedEventType)) {
+      setSelectedEventType('*')
+    }
+  }, [environmentState.eventTypes, selectedEventType])
 
   const handleDeploy = () => {
-    if (typeof browser !== 'undefined' && browser.runtime) {
-      browser.runtime.sendMessage({
-        type: "deployBbot"
-      });
-      setScanResults('Deploying BBOT...');
+    if (!environmentState.hostConfigured) {
+      setScanResults(environmentState.message || 'Native host is not configured.')
+      return
     }
-  };
+
+    sendMessage('deployBbot')
+    setScanResults(environmentState.updateAvailable ? 'Updating BBOT...' : 'Deploying BBOT...')
+  }
 
   const handleThemeChange = (theme) => {
     document.body.classList.remove('theme-dark', 'theme-light', 'theme-matrix', 'theme-midnight', 'theme-black-lantern')
@@ -145,66 +290,40 @@ function App() {
     setShowThemeMenu(false)
   }
 
-  useEffect(() => {
-    // Load previous results from browser storage
-    if (typeof browser !== 'undefined' && browser.storage) {
-      try {
-        browser.storage.local.get(['lastScan']).then(result => {
-          if (result.lastScan) {
-            setScanResults(result.lastScan)
-          }
-        })
-      } catch (error) {
-        console.error('Failed to access browser.storage.local:', error)
-      }
-    }
-
-    // Listen for updates from background.js
-    if (typeof browser !== 'undefined' && browser.runtime) {
-      browser.runtime.onMessage.addListener((message) => {
-        if (message.type === "updateOutput") {
-          setScanResults(message.data)
-        } else if (message.type === "updateURLs") {
-          setUrlsOutput(message.data)
-        } else if (message.type === "updateOutfiles") {
-          setOutfilesOutput(message.data)
-        } else if (message.type === "updateSubdomains") {
-          setSubdomainsOutput(message.data)
-        } else if (message.type === "updateHosts") {
-          setHosts(message.data)
-        }
-      })
-    }
-  }, [])
-
   const handleScan = () => {
+    if (!environmentState.hostConfigured) {
+      setScanResults(environmentState.message || 'Native host is not configured.')
+      return
+    }
+
+    if (!environmentState.bbotInstalled) {
+      setScanResults('BBOT is not installed. Press Deploy BBOT to install the latest stable version.')
+      return
+    }
+
+    if (!selectedPreset) {
+      setScanResults('Loading BBOT presets...')
+      return
+    }
+
     if (!target.trim()) {
       alert('Please enter a target domain')
       return
     }
 
-    setScanResults('Scanning target...')
+    setScanResults(viewPreset ? 'Loading current preset...' : 'Scanning target...')
 
-    if (typeof browser !== 'undefined' && browser.runtime) {
-      browser.runtime.sendMessage({
-        type: "runScan",
-        target: target.trim(),
-        scanType: document.getElementById('scanSelect').value,
-        deadly: document.getElementById('deadly').value.trim(),
-        eventType: document.getElementById('eventTypeSelect').value.trim() || "*",
-        moddep: document.getElementById('modDeps').value.trim(),
-        flagType: document.getElementById('flagSelect').value.trim(),
-        burp: document.getElementById('burpsuite').checked,
-        viewtype: document.getElementById('viewPreset').checked,
-        scope: document.getElementById('strictScope').checked
-      })
-    }
-  }
-
-  const sendMessage = (type, additionalData = {}) => {
-    if (typeof browser !== 'undefined' && browser.runtime) {
-      browser.runtime.sendMessage({ type, ...additionalData })
-    }
+    sendMessage('runScan', {
+      target: target.trim(),
+      scanType: selectedPreset,
+      deadly: allowDeadly ? '--allow-deadly' : '',
+      eventType: selectedEventType,
+      moddep: moduleDep,
+      flagType: selectedFlag,
+      burp: useBurp,
+      viewtype: viewPreset,
+      scope: strictScope
+    })
   }
 
   const handleTabChange = (tab) => {
@@ -212,136 +331,123 @@ function App() {
   }
 
   const handleToggleStreaming = () => {
-    setIsStreaming(!isStreaming)
-    sendMessage("toggleStream", { stream: !isStreaming })
+    const nextStreamValue = !isStreaming
+    setIsStreaming(nextStreamValue)
+    sendMessage('toggleStream', { stream: nextStreamValue })
   }
 
+  const showDeployButton = environmentState.hostConfigured && (environmentState.status === 'missing' || environmentState.status === 'outdated')
+  const showStatusBanner = ['checking', 'host-missing', 'missing', 'outdated'].includes(environmentState.status)
+  const deployButtonLabel = environmentState.status === 'outdated' ? 'Update BBOT' : 'Deploy BBOT'
+  const bbotOptionsDisabled = !environmentState.hostConfigured || !environmentState.bbotInstalled || (environmentState.bbotInstalled && !environmentState.capabilitiesLoaded)
+  const scanDisabled = !environmentState.hostConfigured || !environmentState.bbotInstalled || !selectedPreset
+
   return (
-    <div className={`app-container`} style={{ transform: `scale(${zoom})` }}>
+    <div className={`app-container ${zoom !== 1 ? 'zoomed' : ''}`} style={zoom !== 1 ? { transform: `scale(${zoom})` } : undefined}>
       <h1>
-        <>
-          <div className="header-content">
-            <div className="header-left">
-              {currentLayout === 'black-lantern' ? (
-                <img 
-                  src={currentTheme === 'light' 
-                    ? "/assets/header/black_lantern_logo_dark.svg" 
-                    : "/assets/header/black_lantern_logo_light.svg"} 
-                  alt="Black Lantern Security" 
-                  className="header-logo" 
-                />
-              ) : (
-                <>
-                  <img src="/assets/icons/icon32.png" alt="BBOT" width="32" height="32" />
-                  <span className="header-title">
-                    <span className="orange-b">B</span>
-                    <span className="black-text">BOT</span>
-                    <span className="white-text"> Scanner</span>
-                  </span>
-                </>
-              )}
-            </div>
-            <div className="theme-selector">
-              <div className="button-container">
-                <button className="deploy-button" onClick={handleDeploy}>
-                  <Download size={14} /> Deploy
-                </button>
-                <button className="styles-button" onClick={() => setShowThemeMenu(!showThemeMenu)}>
-                  Styles
-                </button>
-              </div>
-              {showThemeMenu && (
-                <div className="theme-menu">
-                  <div className="theme-menu-section">
-                    <h3>Layouts</h3>
-                    <button 
-                      className={clsx('theme-option', { active: currentLayout === 'default' })}
-                      onClick={() => handleLayoutChange('default')}
-                    >
-                      Default Layout
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentLayout === 'compact' })}
-                      onClick={() => handleLayoutChange('compact')}
-                    >
-                      Compact
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentLayout === 'classic' })}
-                      onClick={() => handleLayoutChange('classic')}
-                    >
-                      Classic
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentLayout === 'modern' })}
-                      onClick={() => handleLayoutChange('modern')}
-                    >
-                      Modern
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentLayout === 'matrix' })}
-                      onClick={() => handleLayoutChange('matrix')}
-                    >
-                      Matrix Terminal
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentLayout === 'midnight' })}
-                      onClick={() => handleLayoutChange('midnight')}
-                    >
-                      Midnight
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentLayout === 'black-lantern' })}
-                      onClick={() => handleLayoutChange('black-lantern')}
-                    >
-                      Black Lantern
-                    </button>
-                  </div>
-                  <div className="theme-menu-section">
-                    <h3>Themes</h3>
-                    <button 
-                      className={clsx('theme-option', { active: currentTheme === 'default' })}
-                      onClick={() => handleThemeChange('default')}
-                    >
-                      Default Theme
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentTheme === 'dark' })}
-                      onClick={() => handleThemeChange('dark')}
-                    >
-                      Cyberpunk Dark
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentTheme === 'light' })}
-                      onClick={() => handleThemeChange('light')}
-                    >
-                      Modern Light
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentTheme === 'matrix' })}
-                      onClick={() => handleThemeChange('matrix')}
-                    >
-                      Matrix
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentTheme === 'midnight' })}
-                      onClick={() => handleThemeChange('midnight')}
-                    >
-                      Midnight
-                    </button>
-                    <button 
-                      className={clsx('theme-option', { active: currentTheme === 'black-lantern' })}
-                      onClick={() => handleThemeChange('black-lantern')}
-                    >
-                      Black Lantern
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+        <div className="header-content">
+          <div className="header-left">
+            {currentLayout === 'black-lantern' ? (
+              <img
+                src={currentTheme === 'light' ? '/assets/header/black_lantern_logo_dark.svg' : '/assets/header/black_lantern_logo_light.svg'}
+                alt="Black Lantern Security"
+                className="header-logo"
+              />
+            ) : (
+              <>
+                <img src="/assets/icons/icon32.png" alt="BBOT" width="32" height="32" />
+                <span className="header-title">
+                  <span className="orange-b">B</span>
+                  <span className="black-text">BOT</span>
+                  <span className="white-text"> Scanner</span>
+                </span>
+              </>
+            )}
           </div>
-        </>
+          <div className="theme-selector">
+            <div className="button-container">
+              {showDeployButton && (
+                <button className="deploy-button" onClick={handleDeploy}>
+                  <Download size={14} /> {deployButtonLabel}
+                </button>
+              )}
+              <button className="styles-button" onClick={() => setShowThemeMenu(!showThemeMenu)}>
+                Styles
+              </button>
+            </div>
+            {showThemeMenu && (
+              <div className="theme-menu">
+                <div className="theme-menu-section">
+                  <h3>Layouts</h3>
+                  <button className={clsx('theme-option', { active: currentLayout === 'default' })} onClick={() => handleLayoutChange('default')}>
+                    Default Layout
+                  </button>
+                  <button className={clsx('theme-option', { active: currentLayout === 'compact' })} onClick={() => handleLayoutChange('compact')}>
+                    Compact
+                  </button>
+                  <button className={clsx('theme-option', { active: currentLayout === 'classic' })} onClick={() => handleLayoutChange('classic')}>
+                    Classic
+                  </button>
+                  <button className={clsx('theme-option', { active: currentLayout === 'modern' })} onClick={() => handleLayoutChange('modern')}>
+                    Modern
+                  </button>
+                  <button className={clsx('theme-option', { active: currentLayout === 'matrix' })} onClick={() => handleLayoutChange('matrix')}>
+                    Matrix Terminal
+                  </button>
+                  <button className={clsx('theme-option', { active: currentLayout === 'midnight' })} onClick={() => handleLayoutChange('midnight')}>
+                    Midnight
+                  </button>
+                  <button className={clsx('theme-option', { active: currentLayout === 'black-lantern' })} onClick={() => handleLayoutChange('black-lantern')}>
+                    Black Lantern
+                  </button>
+                </div>
+                <div className="theme-menu-section">
+                  <h3>Themes</h3>
+                  <button className={clsx('theme-option', { active: currentTheme === 'default' })} onClick={() => handleThemeChange('default')}>
+                    Default Theme
+                  </button>
+                  <button className={clsx('theme-option', { active: currentTheme === 'dark' })} onClick={() => handleThemeChange('dark')}>
+                    Cyberpunk Dark
+                  </button>
+                  <button className={clsx('theme-option', { active: currentTheme === 'light' })} onClick={() => handleThemeChange('light')}>
+                    Modern Light
+                  </button>
+                  <button className={clsx('theme-option', { active: currentTheme === 'matrix' })} onClick={() => handleThemeChange('matrix')}>
+                    Matrix
+                  </button>
+                  <button className={clsx('theme-option', { active: currentTheme === 'midnight' })} onClick={() => handleThemeChange('midnight')}>
+                    Midnight
+                  </button>
+                  <button className={clsx('theme-option', { active: currentTheme === 'black-lantern' })} onClick={() => handleThemeChange('black-lantern')}>
+                    Black Lantern
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </h1>
+
+      {showStatusBanner && (
+        <div className={clsx('status-banner', {
+          warning: environmentState.status === 'missing' || environmentState.status === 'outdated',
+          error: environmentState.status === 'host-missing',
+          neutral: environmentState.status === 'checking'
+        })}>
+          <div className="status-message-block">
+            <span>{environmentState.message}</span>
+            {environmentState.status === 'host-missing' && (
+              <code className="status-command">bash install.sh</code>
+            )}
+          </div>
+          {(environmentState.installedVersion || environmentState.latestVersion) && (
+            <span className="status-meta">
+              {environmentState.installedVersion && <span>Installed: v{environmentState.installedVersion}</span>}
+              {environmentState.latestVersion && <span>Latest: v{environmentState.latestVersion}</span>}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className={`main-content ${isSettingsCollapsed ? 'collapsed' : ''}`}>
         <h2 onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)}>
@@ -358,7 +464,7 @@ function App() {
               placeholder="Enter URL or select from history"
               className="target-input"
               value={target}
-              onChange={(e) => setTarget(e.target.value)}
+              onChange={(event) => setTarget(event.target.value)}
             />
             <datalist id="recentDomains">
               {recentDomains.map((domain, index) => (
@@ -367,71 +473,35 @@ function App() {
             </datalist>
           </div>
 
-          <select id="scanSelect" className="select-field">
-            <option value="baddns-thorough">BAD DNS Thorough</option>
-            <option value="baddns-intense">BAD DNS Intense</option>
-            <option value="cloud-enum">Cloud Enumeration</option>
-            <option value="code-enum">Code Enumeration</option>
-            <option value="dirbust-heavy">Directory Brute-force (Heavy)</option>
-            <option value="dirbust-light">Directory Brute-force (Light)</option>
-            <option value="dotnet-audit">.NET/IIS Audit</option>
-            <option value="email-enum">Email Enumeration</option>
-            <option value="fast">Fast Scan</option>
-            <option value="iis-shortnames">IIS Shortname Enumeration</option>
-            <option value="kitchen-sink">Kitchen Sink (All Modules)</option>
-            <option value="lightfuzz-heavy">Lightfuzz Heavy</option>
-            <option value="lightfuzz-light">Lightfuzz Light</option>
-            <option value="lightfuzz-medium">Lightfuzz Medium</option>
-            <option value="lightfuzz-superheavy">Lightfuzz Superheavy</option>
-            <option value="lightfuzz-xss">Lightfuzz XSS</option>
-            <option value="nuclei">Nuclei</option>
-            <option value="nuclei-budget">Nuclei Budget</option>
-            <option value="nuclei-intense">Nuclei Intense</option>
-            <option value="nuclei-technology">Nuclei Technology</option>
-            <option value="paramminer">Parameter Brute-force</option>
-            <option value="spider">Web Spider</option>
-            <option value="spider-intense">Web Spider Intense</option>
-            <option value="subdomain-enum">Subdomain Enumeration</option>
-            <option value="tech-detect">Technology Detection</option>
-            <option value="web-basic">Basic Web Scan</option>
-            <option value="web-screenshots">Web Screenshot Capture</option>
-            <option value="web-thorough">Thorough Web Scan</option>
+          <select
+            id="scanSelect"
+            className="select-field"
+            value={selectedPreset}
+            onChange={(event) => setSelectedPreset(event.target.value)}
+            disabled={bbotOptionsDisabled}
+          >
+            {environmentState.presets.length === 0 ? (
+              <option value="">
+                {environmentState.bbotInstalled ? 'Loading presets...' : 'BBOT not installed'}
+              </option>
+            ) : (
+              environmentState.presets.map((preset) => (
+                <option key={preset} value={preset}>{preset}</option>
+              ))
+            )}
           </select>
 
-          <select id="eventTypeSelect" className="select-field">
-            <option value="*" selected>All Events (*)</option>
-            <option value="ASN">ASN</option>
-            <option value="AZURE_TENANT">Azure Tenant</option>
-            <option value="CODE_REPOSITORY">Code Repository</option>
-            <option value="DNS_NAME">DNS Name</option>
-            <option value="DNS_NAME_UNRESOLVED">Unresolved DNS Name</option>
-            <option value="EMAIL_ADDRESS">Email Address</option>
-            <option value="FILESYSTEM">Filesystem</option>
-            <option value="FINDING">Finding</option>
-            <option value="GEOLOCATION">Geolocation</option>
-            <option value="HASHED_PASSWORD">Hashed Password</option>
-            <option value="HTTP_RESPONSE">HTTP Response</option>
-            <option value="IP_ADDRESS">IP Address</option>
-            <option value="IP_RANGE">IP Range</option>
-            <option value="MOBILE_APP">Mobile App</option>
-            <option value="OPEN_TCP_PORT">Open TCP Port</option>
-            <option value="ORG_STUB">Organization Stub</option>
-            <option value="PASSWORD">Password</option>
-            <option value="PROTOCOL">Protocol</option>
-            <option value="RAW_DNS_RECORD">Raw DNS Record</option>
-            <option value="RAW_TEXT">Raw Text</option>
-            <option value="SOCIAL">Social</option>
-            <option value="STORAGE_BUCKET">Storage Bucket</option>
-            <option value="TECHNOLOGY">Technology</option>
-            <option value="URL">URL</option>
-            <option value="URL_HINT">URL Hint</option>
-            <option value="URL_UNVERIFIED">Unverified URL</option>
-            <option value="USERNAME">Username</option>
-            <option value="VHOST">Virtual Host (VHOST)</option>
-            <option value="VULNERABILITY">Vulnerability</option>
-            <option value="WAF">Web Application Firewall (WAF)</option>
-            <option value="WEBSCREENSHOT">Web Screenshot</option>
-            <option value="WEB_PARAMETER">Web Parameter</option>
+          <select
+            id="eventTypeSelect"
+            className="select-field"
+            value={selectedEventType}
+            onChange={(event) => setSelectedEventType(event.target.value)}
+            disabled={bbotOptionsDisabled}
+          >
+            <option value="*">All Events (*)</option>
+            {environmentState.eventTypes.map((eventType) => (
+              <option key={eventType} value={eventType}>{eventType}</option>
+            ))}
           </select>
 
           <Accordion.Root type="single" collapsible className="accordion-root">
@@ -444,55 +514,49 @@ function App() {
                 <div className="advanced-settings">
                   <div className="select-group">
                     <label>Module Dependencies</label>
-                    <select id="modDeps" className="select-field">
-                      <option value="--ignore-failed-deps" selected>Ignore Failed Deps</option>
-                      <option value="--no-deps">Don't install deps.</option>
-                      <option value="--forced-deps">Force</option>
-                      <option value="--retry-deps">retry deps</option>
-                      <option value="--install-all-deps">install all</option>
+                    <select
+                      id="modDeps"
+                      className="select-field"
+                      value={moduleDep}
+                      onChange={(event) => setModuleDep(event.target.value)}
+                    >
+                      {MODULE_DEP_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
-                  
+
                   <div className="select-group">
                     <label>Flag Type</label>
-                    <select id="flagSelect" className="select-field">
-                      <option value="" selected>N/A</option>
-                      <option value="web-thorough">Web Thorough</option>
-                      <option value="portscan">Port Scan</option>
-                      <option value="service-enum">Service Enumeration</option>
-                      <option value="passive">Passive</option>
-                      <option value="subdomain-enum">Subdomain Enumeration</option>
-                      <option value="web-basic">Web Basic</option>
-                      <option value="code-enum">Code Enumeration</option>
-                      <option value="social-enum">Social Enumeration</option>
-                      <option value="safe">Safe</option>
-                      <option value="cloud-enum">Cloud Enumeration</option>
-                      <option value="report">Report</option>
-                      <option value="baddns">Bad DNS</option>
-                      <option value="web-paramminer">Web Parameter Miner</option>
-                      <option value="subdomain-hijack">Subdomain Hijack</option>
-                      <option value="active">Active</option>
-                      <option value="aggressive">Aggressive</option>
-                      <option value="email-enum">Email Enumeration</option>
-                      <option value="affiliates">Affiliates</option>
-                      <option value="web-screenshots">Web Screenshots</option>
-                      <option value="slow">Slow</option>
-                      <option value="deadly">Deadly</option>
-                      <option value="iis-shortnames">IIS Short Names</option>
+                    <select
+                      id="flagSelect"
+                      className="select-field"
+                      value={selectedFlag}
+                      onChange={(event) => setSelectedFlag(event.target.value)}
+                      disabled={bbotOptionsDisabled}
+                    >
+                      <option value="">N/A</option>
+                      {environmentState.flags.map((flag) => (
+                        <option key={flag} value={flag}>{flag}</option>
+                      ))}
                     </select>
                   </div>
 
                   <div className="checkbox-group">
                     <label>
-                      <input type="checkbox" id="burpsuite" />
+                      <input type="checkbox" id="allowDeadly" checked={allowDeadly} onChange={(event) => setAllowDeadly(event.target.checked)} />
+                      Allow Deadly
+                    </label>
+                    <label>
+                      <input type="checkbox" id="burpsuite" checked={useBurp} onChange={(event) => setUseBurp(event.target.checked)} />
                       Use Burp Proxy
                     </label>
                     <label>
-                      <input type="checkbox" id="viewPreset" />
+                      <input type="checkbox" id="viewPreset" checked={viewPreset} onChange={(event) => setViewPreset(event.target.checked)} />
                       View Preset
                     </label>
                     <label>
-                      <input type="checkbox" id="strictScope" />
+                      <input type="checkbox" id="strictScope" checked={strictScope} onChange={(event) => setStrictScope(event.target.checked)} />
                       Strict Scope
                     </label>
                   </div>
@@ -503,47 +567,51 @@ function App() {
 
           <div className="button-row">
             <div className="button-group">
-              <button className="action-button" onClick={() => sendMessage("getOutput")}>
+              <button className="action-button" onClick={() => sendMessage('getOutput')}>
                 <Terminal size={14} /> Stream Output
               </button>
-              <button className="action-button" onClick={() => sendMessage("getOutfile")}>
+              <button className="action-button" onClick={() => sendMessage('getOutfile')}>
                 <FileSearch size={14} /> Get Outfiles
               </button>
-              <button className="action-button" onClick={() => sendMessage("clearOutput")}>
+              <button className="action-button" onClick={() => sendMessage('clearOutput')}>
                 <Trash2 size={14} /> Clear Output
               </button>
             </div>
             <div className="button-group">
-              <button className="action-button" onClick={() => sendMessage("clearHosts")}>
+              <button className="action-button" onClick={() => sendMessage('clearHosts')}>
                 <Trash2 size={14} /> Clear Targets
               </button>
-              <button className="action-button" onClick={() => sendMessage("getURLS")}>
+              <button className="action-button" onClick={() => sendMessage('getURLS')}>
                 <Target size={14} /> Get URLs
               </button>
-              <button className="action-button" onClick={() => sendMessage("getHosts")}>
+              <button className="action-button" onClick={() => sendMessage('getHosts')}>
                 <Database size={14} /> Scanned Targets
               </button>
             </div>
             <div className="button-group">
               <button className="action-button" onClick={handleToggleStreaming}>
-                <Terminal size={14} /> {isStreaming ? "Pause Streaming" : "Resume Streaming"}
+                <Terminal size={14} /> {isStreaming ? 'Pause Streaming' : 'Resume Streaming'}
               </button>
-              <button className="action-button" onClick={() => sendMessage("killScan")}>
+              <button className="action-button" onClick={() => sendMessage('killScan')}>
                 <XCircle size={14} /> Kill Scan
               </button>
-              <select id="getSubdomains" className="select-field" onChange={(e) => {
-                const selectedPath = e.target.value;
-                if (selectedPath) {
-                  sendMessage("getSubdomains", { subdomains: selectedPath });
-                }
-              }}>
+              <select
+                id="getSubdomains"
+                className="select-field"
+                onChange={(event) => {
+                  const selectedPath = event.target.value
+                  if (selectedPath) {
+                    sendMessage('getSubdomains', { subdomains: selectedPath })
+                  }
+                }}
+              >
                 <option value="">Select Subdomain File</option>
                 {subdomainFiles.map((file, index) => (
                   <option key={index} value={file}>{file.split('/').slice(-2).join('/')}</option>
                 ))}
               </select>
             </div>
-            <button className="action-button scan-button" onClick={handleScan}>
+            <button className="action-button scan-button" onClick={handleScan} disabled={scanDisabled}>
               <Play size={14} /> Run Scan
             </button>
           </div>
@@ -551,53 +619,59 @@ function App() {
       </div>
 
       <div className="output-section">
-        <div className={`output-container ${isTargetsCollapsed ? 'collapsed' : ''}`} style={{'--current-icon': `url(${outputIcon})`}}>
+        <div className={`output-container targets-output-container ${isTargetsCollapsed ? 'collapsed' : ''}`} style={{ '--current-icon': `url(${outputIcon})` }}>
           <h2 onClick={() => setIsTargetsCollapsed(!isTargetsCollapsed)}>
             <span><Shield size={16} /> Scanned Targets</span>
             <ChevronDown className="chevron" size={16} />
           </h2>
-          <pre id="hostsArea" className="hosts-area">{hosts}</pre>
+          {!isTargetsCollapsed && (
+            <pre id="hostsArea" className="hosts-area">{hosts}</pre>
+          )}
         </div>
 
-        <div className={`output-container ${isOutputCollapsed ? 'collapsed' : ''}`} style={{'--current-icon': `url(${outputIcon})`}}>
+        <div className={`output-container scan-output-container ${isOutputCollapsed ? 'collapsed' : ''}`} style={{ '--current-icon': `url(${outputIcon})` }}>
           <h2 onClick={() => setIsOutputCollapsed(!isOutputCollapsed)}>
             <span><Shield size={16} /> Scan Output</span>
             <ChevronDown className="chevron" size={16} />
           </h2>
-          <div className="tabs">
-            <div className={clsx("tab", { active: activeTab === 'raw' })} onClick={() => handleTabChange('raw')}>
-              Raw Output
-            </div>
-            <div className={clsx("tab", { active: activeTab === 'urls' })} onClick={() => handleTabChange('urls')}>
-              URLs
-            </div>
-            <div className={clsx("tab", { active: activeTab === 'outfiles' })} onClick={() => handleTabChange('outfiles')}>
-              Outfiles
-            </div>
-            <div className={clsx("tab", { active: activeTab === 'subdomains' })} onClick={() => handleTabChange('subdomains')}>
-              Subdomains
-            </div>
-          </div>
-          <div className={clsx("tab-content", { active: activeTab === 'raw' })}>
-            <pre id="results" className="results-container">
-              {scanResults || <p className="empty-state">No scan results yet</p>}
-            </pre>
-          </div>
-          <div className={clsx("tab-content", { active: activeTab === 'urls' })}>
-            <pre id="urlsOutput" className="results-container">
-              {urlsOutput || <p className="empty-state">No URLs extracted yet</p>}
-            </pre>
-          </div>
-          <div className={clsx("tab-content", { active: activeTab === 'outfiles' })}>
-            <pre id="outfilesOutput" className="results-container">
-              {outfilesOutput || <p className="empty-state">No outfiles extracted yet</p>}
-            </pre>
-          </div>
-          <div className={clsx("tab-content", { active: activeTab === 'subdomains' })}>
-            <pre id="subdomainsOutput" className="results-container">
-              {subdomainsOutput || <p className="empty-state">No subdomains loaded yet</p>}
-            </pre>
-          </div>
+          {!isOutputCollapsed && (
+            <>
+              <div className="tabs">
+                <div className={clsx('tab', { active: activeTab === 'raw' })} onClick={() => handleTabChange('raw')}>
+                  Raw Output
+                </div>
+                <div className={clsx('tab', { active: activeTab === 'urls' })} onClick={() => handleTabChange('urls')}>
+                  URLs
+                </div>
+                <div className={clsx('tab', { active: activeTab === 'outfiles' })} onClick={() => handleTabChange('outfiles')}>
+                  Outfiles
+                </div>
+                <div className={clsx('tab', { active: activeTab === 'subdomains' })} onClick={() => handleTabChange('subdomains')}>
+                  Subdomains
+                </div>
+              </div>
+              <div className={clsx('tab-content', { active: activeTab === 'raw' })}>
+                <pre id="results" className="results-container">
+                  {scanResults || <p className="empty-state">No scan results yet</p>}
+                </pre>
+              </div>
+              <div className={clsx('tab-content', { active: activeTab === 'urls' })}>
+                <pre id="urlsOutput" className="results-container">
+                  {urlsOutput || <p className="empty-state">No URLs extracted yet</p>}
+                </pre>
+              </div>
+              <div className={clsx('tab-content', { active: activeTab === 'outfiles' })}>
+                <pre id="outfilesOutput" className="results-container">
+                  {outfilesOutput || <p className="empty-state">No outfiles extracted yet</p>}
+                </pre>
+              </div>
+              <div className={clsx('tab-content', { active: activeTab === 'subdomains' })}>
+                <pre id="subdomainsOutput" className="results-container">
+                  {subdomainsOutput || <p className="empty-state">No subdomains loaded yet</p>}
+                </pre>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

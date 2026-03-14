@@ -25,6 +25,14 @@
   border-color: var(--border-color);
 }
 
+.theme-light .output-container,
+.theme-light .accordion-item,
+.theme-light .accordion-content,
+.theme-light .theme-menu {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
 .theme-light .action-button {
   background: var(--accent-primary);
 }
@@ -51,6 +59,49 @@
   color: var(--text-primary);
 }
 
+.theme-light h1,
+.theme-light h2,
+.theme-light .accordion-trigger,
+.theme-light .select-group label,
+.theme-light .checkbox-group label,
+.theme-light .tab,
+.theme-light .tab.active,
+.theme-light .empty-state,
+.theme-light .status-banner,
+.theme-light .theme-option,
+.theme-light .theme-menu-section h3 {
+  color: var(--text-primary);
+}
+
+.theme-light .main-content h2,
+.theme-light .output-container h2,
+.theme-light .main-content h2 > span,
+.theme-light .output-container h2 > span,
+.theme-light .main-content h2 .chevron,
+.theme-light .output-container h2 .chevron {
+  color: var(--text-primary);
+}
+
+.theme-light .status-banner {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-light .status-meta,
+.theme-light .tab {
+  color: var(--text-secondary);
+}
+
+.theme-light .tab {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-light .tab.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 .theme-light .styles-button {
   background: var(--accent-primary);
   color: #fff;
@@ -61,4 +112,8 @@
 .theme-light .styles-button:hover {
   background: var(--button-hover);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.theme-light .theme-option.active {
+  color: #fff;
 }

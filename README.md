@@ -59,7 +59,7 @@ The following images showcase the BBOT Scanner Firefox Extension's user interfac
 
 - Firefox Browser
 - Python 3.x
-- BBOT installed via pipx
+- Node.js and npm
 
 ### Setup
 
@@ -69,12 +69,21 @@ git clone <repository-url>
 cd BBOT-Xtension
 ```
 
-2. Install dependencies:
+2. Install the native host runtime and BBOT:
+```bash
+bash install.sh
+```
+
+This copies the native messaging host into `~/.local/share/bbot-xtension`,
+registers Firefox native messaging, and installs or upgrades the stable BBOT
+release.
+
+3. Install frontend dependencies:
 ```bash
 npm install
 ```
 
-3. Build the extension:
+4. Build the extension:
 ```bash
 npm run build
 ```
@@ -84,6 +93,15 @@ This will create a `bbot-scanner.xpi` file in the `BBOT-Xtension/` project root.
 
 1. Open Firefox and navigate to `about:debugging`
 2. Click "This Firefox" on the left
+3. Click "Load Temporary Add-on" and select `bbot-scanner.xpi`
+
+### Runtime Behavior
+
+- If the native host is missing, the panel shows a setup-required message.
+- If BBOT is missing, the panel shows `Deploy BBOT`.
+- If BBOT is installed but out of date, the panel shows `Update BBOT`.
+- If BBOT is current, the button is hidden.
+- Presets, flags, and event types are loaded from the installed BBOT runtime.
 
 ## Project Structure
 
@@ -92,6 +110,7 @@ This will create a `bbot-scanner.xpi` file in the `BBOT-Xtension/` project root.
 ├── host/                      # Native messaging host components
 │   ├── bbot_host.json        # Native messaging host manifest
 │   └── bbot_host.py          # Python bridge to BBOT
+├── install.sh                # First-time Linux bootstrap
 ├── src/
 │   ├── assets/               # Images and icons
 │   ├── styles/               # CSS styling
@@ -110,9 +129,10 @@ The extension communicates with BBOT through a Python-based native messaging hos
 - Streams real-time results
 - Saves scan outputs locally
 
-The path to the deployment script can be customized by setting `deployScriptPath`
-in the extension's storage. If no path is configured, the background script runs
-the bundled `deploy.sh` located in the extension directory.
+Run `bash install.sh` once on Linux before using the extension. The install step
+copies the native runtime into `~/.local/share/bbot-xtension`, registers the
+host with Firefox, and installs or upgrades BBOT. After that, the in-panel
+`Deploy BBOT` or `Update BBOT` button uses the installed runtime.
 
 ## Development
 

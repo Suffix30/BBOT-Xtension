@@ -4,11 +4,9 @@
   "version": "1.0",
   "description": "Firefox extension for BBOT - Bug Bounty Recon Tool",
   "permissions": [
-    "activeTab",
     "nativeMessaging",
     "storage",
     "history",
-    "file:///*",
     "sidebarAction"
   ],
   "browser_specific_settings": {

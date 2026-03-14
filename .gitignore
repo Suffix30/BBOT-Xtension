@@ -2,3 +2,5 @@ node_modules/
 bbot-scanner.xpi
 dist/
 .pytest_cache/
+__pycache__/
+*.pyc

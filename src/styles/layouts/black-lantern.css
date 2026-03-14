@@ -107,25 +107,9 @@
   border: 1px solid rgba(110, 43, 255, 0.2);
   border-radius: 12px;
   padding: 12px;
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  flex: 1;
-  min-height: 0;
-  max-height: 100%;
-  transition: all 0.2s ease-in-out;
-  overflow: hidden;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(110, 43, 255, 0.1);
-  position: relative;
-  z-index: auto;
-}
-
-.layout-black-lantern .output-container.collapsed {
-  flex: 0;
-  min-height: 44px;
-  max-height: 44px;
 }
 
 .layout-black-lantern .output-container h2 {
@@ -148,28 +132,12 @@
 
 .layout-black-lantern .results-container,
 .layout-black-lantern .hosts-area {
-  flex: 1;
-  overflow: auto;
-  margin: 0;
-  padding: 12px;
   background: #0d0a1fcc;
   border: 1px solid rgba(110, 43, 255, 0.3);
   border-radius: 8px;
   color: #fff;
-  transition: all 0.2s ease-in-out;
-  min-height: 0;
-  max-height: calc(100vh - 500px);
   z-index: auto;
   position: relative;
-}
-
-.layout-black-lantern .output-container.collapsed .results-container,
-.layout-black-lantern .output-container.collapsed .hosts-area {
-  height: 0;
-  padding: 0;
-  opacity: 0;
-  pointer-events: none;
-  margin: 0;
 }
 
 .layout-black-lantern .results-container::before,

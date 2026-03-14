@@ -1,151 +1,559 @@
-
 browser.browserAction.onClicked.addListener(() => {
-    browser.sidebarAction.toggle();
-  });
-  
-  const URLs = /\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b/g;
-  const logOutputs = /\/home\/[^\/]+\/\.bbot\/scans\/[^\/]+\/\S+/g;
-  
-  let port = null;
-  let scanOutput = "";
-  let subdomains = "";
-  let hosts = new Set();
-  let stream = 1;
-  
-  function connectNative() {
-      port = browser.runtime.connectNative("bbot_host");
-  
-      port.onMessage.addListener((message) => {
-          if (message.type === "scanResult") {
-              scanOutput += message.data + "\n";
-              if (stream == 1) {
-                  browser.runtime.sendMessage({ type: "updateOutput", data: scanOutput });
-              } else {
-                  console.log("Streaming paused");
-              }
-          } else if (message.type === "error") {
-              scanOutput += `[ERROR] ${message.data}\n`;
-              browser.runtime.sendMessage({ type: "updateOutput", data: scanOutput });
-          }
-      });
-  
-      port.onDisconnect.addListener(() => {
-          console.log("Disconnected from bbot_host");
-          port = null;
-      });
-  }
-  
-  function extractInfo(scanOutput) {
-      console.log("Raw Scan Output:", scanOutput);
-      const markers = scanOutput.match(URLs) || [];
-      const uniqueMarkers = [...new Set(markers)];
-      console.log("Extracted Markers (Unique):", uniqueMarkers);
-      return { markers: uniqueMarkers };
-  }
-  
-  function extractOutput(scanOutput) {
-      console.log("Raw Scan Output:", scanOutput);
-      const outputs = scanOutput.match(logOutputs) || [];
-      const uniqueOutputs = [...new Set(outputs)];
-      return { outputs: uniqueOutputs };
-  }
-  
-  function fetchSubdomains(filePath) {
-      return new Promise((resolve, reject) => {
-          browser.runtime.sendNativeMessage("bbot_host", { command: "getSubdomains", subdomains: filePath })
-              .then(response => {
-                  if (response.error) {
-                      console.error("Error loading subdomains:", response.error);
-                      reject("Failed to load subdomains.");
-                  } else {
-                      console.log("Subdomains:", response.data);
-                      subdomains = response.data;
-                      resolve(response.data);
-                  }
-              })
-              .catch(error => {
-                  console.error("Native Message Error:", error);
-                  reject("Error communicating with bbot_host.");
-              });
-      });
-  }
-  
-  connectNative();
-  
-  browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-      if (!port) {
-          connectNative();
+  browser.sidebarAction.toggle()
+})
+
+const logOutputs = /(?:\/home\/[^\/]+\/\.bbot\/scans\/[^\/]+\/\S+|\/\S+_output\.txt|\b[A-Za-z0-9._-]+_output\.txt\b)/g
+const URL_EVENT_TYPES = new Set(["URL", "URL_HINT", "URL_UNVERIFIED"])
+const SUBDOMAIN_EVENT_TYPES = new Set(["DNS_NAME", "DNS_NAME_UNRESOLVED", "VHOST"])
+const FALLBACK_EVENT_TYPES = [
+  "ASN",
+  "AZURE_TENANT",
+  "CODE_REPOSITORY",
+  "DNS_NAME",
+  "DNS_NAME_UNRESOLVED",
+  "EMAIL_ADDRESS",
+  "FILESYSTEM",
+  "FINDING",
+  "GEOLOCATION",
+  "HASHED_PASSWORD",
+  "HTTP_RESPONSE",
+  "IP_ADDRESS",
+  "IP_RANGE",
+  "MOBILE_APP",
+  "OPEN_TCP_PORT",
+  "ORG_STUB",
+  "PASSWORD",
+  "PROTOCOL",
+  "RAW_DNS_RECORD",
+  "RAW_TEXT",
+  "SOCIAL",
+  "STORAGE_BUCKET",
+  "TECHNOLOGY",
+  "URL",
+  "URL_HINT",
+  "URL_UNVERIFIED",
+  "USERNAME",
+  "VHOST",
+  "VULNERABILITY",
+  "WAF",
+  "WEBSCREENSHOT",
+  "WEB_PARAMETER"
+]
+const DEFAULT_ENVIRONMENT_STATE = {
+  hostConfigured: null,
+  hostError: "",
+  bbotInstalled: false,
+  bbotPath: "",
+  installedVersion: "",
+  latestVersion: "",
+  updateAvailable: false,
+  status: "checking",
+  message: "Checking BBOT status...",
+  capabilitiesLoaded: false,
+  presets: [],
+  flags: [],
+  eventTypes: FALLBACK_EVENT_TYPES
+}
+
+let port = null
+let scanOutput = ""
+let hosts = new Set()
+let stream = 1
+let environmentState = { ...DEFAULT_ENVIRONMENT_STATE }
+const backgroundReady = browser.storage && browser.storage.local && browser.storage.local.get
+  ? browser.storage.local.get(["lastScan"]).then(result => {
+      if (typeof result.lastScan === "string") {
+        scanOutput = result.lastScan
       }
-      
-      if (msg.type === "runCommand") {
-          port.postMessage({
-              command: "shell",
-              script: `cd ${msg.cwd || '.'} && ${msg.command}`
-          });
-      } else if (msg.type === "deployBbot") {
-          browser.storage.local.get('deployScriptPath').then(result => {
-              const deployDir = result.deployScriptPath || '.';
-              port.postMessage({
-                  command: "shell",
-                  script: `cd "${deployDir}" && chmod +x deploy.sh && ./deploy.sh`
-              });
-          });
+    }).catch(() => {})
+  : Promise.resolve()
+
+function emitRuntimeMessage(message) {
+  const result = browser.runtime.sendMessage(message)
+  if (result && typeof result.catch === "function") {
+    result.catch(() => {})
+  }
+}
+
+function persistLastScan() {
+  if (!browser.storage || !browser.storage.local || !browser.storage.local.set) {
+    return
+  }
+  const result = browser.storage.local.set({ lastScan: scanOutput })
+  if (result && typeof result.catch === "function") {
+    result.catch(() => {})
+  }
+}
+
+function updateScanOutput(nextOutput) {
+  scanOutput = nextOutput
+  persistLastScan()
+  emitRuntimeMessage({ type: "updateOutput", data: scanOutput })
+}
+
+function appendScanOutput(line) {
+  scanOutput += `${line}\n`
+  persistLastScan()
+  if (stream === 1) {
+    emitRuntimeMessage({ type: "updateOutput", data: scanOutput })
+  }
+}
+
+function setEnvironmentState(nextState) {
+  environmentState = nextState
+  emitRuntimeMessage({ type: "environmentStateUpdated", data: environmentState })
+}
+
+function mergeEnvironmentState(patch) {
+  setEnvironmentState({ ...environmentState, ...patch })
+}
+
+function missingHostState(errorMessage = "") {
+  return {
+    ...DEFAULT_ENVIRONMENT_STATE,
+    hostConfigured: false,
+    hostError: errorMessage,
+    status: "host-missing",
+    message: "Native host is not configured. On Linux run the installer from a BBOT-Xtension checkout, then reopen Firefox."
+  }
+}
+
+function normalizeStatusResponse(response) {
+  const data = response && response.data ? response.data : {}
+  return {
+    ...environmentState,
+    hostConfigured: true,
+    hostError: "",
+    bbotInstalled: Boolean(data.bbotInstalled),
+    bbotPath: data.bbotPath || "",
+    installedVersion: data.installedVersion || "",
+    latestVersion: data.latestVersion || "",
+    updateAvailable: Boolean(data.updateAvailable),
+    status: data.status || "ready",
+    message: data.message || "",
+    capabilitiesLoaded: Boolean(environmentState.capabilitiesLoaded && data.bbotInstalled)
+  }
+}
+
+function normalizeCapabilitiesResponse(response) {
+  const data = response && response.data ? response.data : {}
+  return {
+    presets: Array.isArray(data.presets) ? data.presets : [],
+    flags: Array.isArray(data.flags) ? data.flags : [],
+    eventTypes: Array.isArray(data.eventTypes) && data.eventTypes.length > 0 ? data.eventTypes : FALLBACK_EVENT_TYPES
+  }
+}
+
+async function refreshCapabilities() {
+  if (!environmentState.hostConfigured || !environmentState.bbotInstalled) {
+    mergeEnvironmentState({
+      capabilitiesLoaded: false,
+      presets: [],
+      flags: [],
+      eventTypes: FALLBACK_EVENT_TYPES
+    })
+    return environmentState
+  }
+
+  try {
+    const response = await browser.runtime.sendNativeMessage("bbot_host", { command: "getCapabilities" })
+    const capabilities = normalizeCapabilitiesResponse(response)
+    mergeEnvironmentState({
+      capabilitiesLoaded: true,
+      presets: capabilities.presets,
+      flags: capabilities.flags,
+      eventTypes: capabilities.eventTypes
+    })
+  } catch (error) {
+    mergeEnvironmentState({
+      capabilitiesLoaded: false,
+      presets: [],
+      flags: [],
+      eventTypes: FALLBACK_EVENT_TYPES
+    })
+  }
+
+  return environmentState
+}
+
+async function refreshEnvironmentState() {
+  if (environmentState.hostConfigured !== null) {
+    mergeEnvironmentState({
+      status: "checking",
+      message: "Checking BBOT status..."
+    })
+  }
+
+  try {
+    const response = await browser.runtime.sendNativeMessage("bbot_host", { command: "getStatus" })
+    setEnvironmentState(normalizeStatusResponse(response))
+    if (environmentState.bbotInstalled) {
+      await refreshCapabilities()
+    } else {
+      mergeEnvironmentState({
+        capabilitiesLoaded: false,
+        presets: [],
+        flags: [],
+        eventTypes: FALLBACK_EVENT_TYPES
+      })
+    }
+  } catch (error) {
+    const errorMessage = error && error.message ? error.message : ""
+    setEnvironmentState(missingHostState(errorMessage))
+  }
+
+  return environmentState
+}
+
+function connectNative() {
+  if (port) {
+    return port
+  }
+
+  try {
+    port = browser.runtime.connectNative("bbot_host")
+  } catch (error) {
+    setEnvironmentState(missingHostState(error && error.message ? error.message : ""))
+    return null
+  }
+
+  port.onMessage.addListener(message => {
+    if (message.type === "scanResult") {
+      appendScanOutput(message.data)
+    } else if (message.type === "info") {
+      appendScanOutput(`[INFO] ${message.data}`)
+      if (message.data.includes("Scan completed.")) {
+        refreshDerivedOutputs()
       }
-  
-      if (msg.type === "runScan") {
-          hosts.add(msg.target);
-          const eventType = msg.eventType ? msg.eventType : "*";
-  
-          port.postMessage({
-              command: "scan",
-              target: msg.target,
-              scantype: msg.scanType,
-              deadly: msg.deadly,
-              eventtype: eventType,
-              moddep: msg.moddep,
-              flagtype: msg.flagType,
-              burp: msg.burp,
-              viewtype: msg.viewtype,
-              scope: msg.scope
-          });
-      } else if (msg.type === "getOutput") {
-          stream = 1;
-          browser.runtime.sendMessage({ type: "updateOutput", data: scanOutput });
-      } else if (msg.type === "getHosts") {
-          browser.runtime.sendMessage({ type: "updateHosts", data: Array.from(hosts).join('\n') });
-      } else if (msg.type === "clearOutput") {
-          scanOutput = "";
-          browser.runtime.sendMessage({ type: "updateOutput", data: scanOutput });
-      } else if (msg.type === "clearHosts") {
-          hosts.clear();
-          browser.runtime.sendMessage({ type: "updateHosts", data: "" });
-      } else if (msg.type === "getURLS") {
-          const extractedData = extractInfo(scanOutput);
-          let formattedOutput = `Extracted Markers:\n${extractedData.markers.join('\n')}`;
-          console.log("Extracted Data Sent:", formattedOutput);
-          browser.runtime.sendMessage({ type: "updateURLs", data: formattedOutput });
-      } else if (msg.type === "getOutfile") {
-          const extractedData = extractOutput(scanOutput);
-          let formattedOutput = `Extracted Outfile:\n${extractedData.outputs.join('\n')}`;
-          console.log("Extracted Data Sent:", formattedOutput);
-          browser.runtime.sendMessage({ type: "updateOutfiles", data: formattedOutput });
-      } else if (msg.type === "runCommand") {
-          port.postMessage({
-              command: "shell",
-              script: `cd ${msg.cwd || '.'} && ${msg.command}`
-          });
-      } else if (msg.type === "killScan") {
-          port.postMessage({ command: "killScan" });
-      } else if (msg.type === "getSubdomains") {
-          fetchSubdomains(msg.subdomains)
-              .then(data => browser.runtime.sendMessage({ type: "updateSubdomains", data: data }))
-              .catch(error => browser.runtime.sendMessage({ type: "updateSubdomains", data: error }));
-      } else if (msg.type === "toggleStream") {
-          stream = msg.stream ? 1 : 0;
-          console.log(stream == 1 ? "Streaming enabled" : "Streaming disabled");
-          if (stream == 1) {
-              browser.runtime.sendMessage({ type: "updateOutput", data: scanOutput });
-          }
+    } else if (message.type === "error") {
+      appendScanOutput(`[ERROR] ${message.data}`)
+    } else if (message.type === "deployComplete") {
+      const nextState = normalizeStatusResponse({ data: message.data })
+      setEnvironmentState(nextState)
+      appendScanOutput("[INFO] Deployment completed.")
+      if (nextState.bbotInstalled) {
+        refreshCapabilities()
       }
-  });
-  
+    }
+  })
+
+  port.onDisconnect.addListener(() => {
+    const errorMessage = browser.runtime.lastError && browser.runtime.lastError.message
+      ? browser.runtime.lastError.message
+      : ""
+    port = null
+    if (errorMessage) {
+      setEnvironmentState(missingHostState(errorMessage))
+    }
+  })
+
+  return port
+}
+
+function extractOutputPaths(output) {
+  const outputs = output.match(logOutputs) || []
+  return [...new Set(outputs)]
+}
+
+function buildListOutput(title, items) {
+  return items.length > 0 ? `${title}\n${items.join("\n")}` : ""
+}
+
+function eventPrimaryText(event) {
+  if (!event) {
+    return ""
+  }
+
+  if (typeof event.data === "string") {
+    return event.data
+  }
+
+  if (typeof event.host === "string") {
+    return event.host
+  }
+
+  if (typeof event.netloc === "string") {
+    return event.netloc
+  }
+
+  if (event.data && typeof event.data === "object") {
+    for (const key of ["url", "host", "name", "value"]) {
+      if (typeof event.data[key] === "string") {
+        return event.data[key]
+      }
+    }
+  }
+
+  return ""
+}
+
+function parseStructuredScanEvents(contents) {
+  const events = []
+  for (const line of (contents || "").split("\n")) {
+    const trimmed = line.trim()
+    if (!trimmed) {
+      continue
+    }
+    try {
+      events.push(JSON.parse(trimmed))
+    } catch (error) {
+    }
+  }
+  return events
+}
+
+function buildUrlsOutput(events) {
+  const urls = []
+  const seen = new Set()
+
+  for (const event of events) {
+    if (!URL_EVENT_TYPES.has(event.type)) {
+      continue
+    }
+    const value = eventPrimaryText(event)
+    if (!value || seen.has(value)) {
+      continue
+    }
+    seen.add(value)
+    urls.push(value)
+  }
+
+  if (urls.length > 0) {
+    return `URLs:\n${urls.join("\n")}`
+  }
+
+  if (events.length > 0) {
+    return "No URL events captured for this scan."
+  }
+
+  return ""
+}
+
+function buildSubdomainsOutput(events) {
+  const subdomains = []
+  const seen = new Set()
+
+  for (const event of events) {
+    if (!SUBDOMAIN_EVENT_TYPES.has(event.type)) {
+      continue
+    }
+
+    const value = eventPrimaryText(event)
+    if (!value) {
+      continue
+    }
+
+    const resolvedHosts = Array.isArray(event.resolved_hosts)
+      ? [...new Set(event.resolved_hosts.filter(Boolean))]
+      : []
+    const formatted = resolvedHosts.length > 0
+      ? `${value} | ${resolvedHosts.join(", ")}`
+      : value
+
+    if (seen.has(formatted)) {
+      continue
+    }
+
+    seen.add(formatted)
+    subdomains.push(formatted)
+  }
+
+  if (subdomains.length > 0) {
+    return `Subdomains:\n${subdomains.join("\n")}`
+  }
+
+  if (events.length > 0) {
+    return "No DNS/subdomain events captured for this scan."
+  }
+
+  return ""
+}
+
+async function readNativeFile(path) {
+  const response = await browser.runtime.sendNativeMessage("bbot_host", { command: "readFile", path })
+  if (response.error) {
+    throw new Error(response.error)
+  }
+  return response.data
+}
+
+async function refreshDerivedOutputs() {
+  await backgroundReady
+
+  const outputPaths = extractOutputPaths(scanOutput)
+  emitRuntimeMessage({ type: "updateOutfiles", data: buildListOutput("Extracted Outfile:", outputPaths) })
+
+  const jsonPaths = outputPaths.filter(path => /\/output\.json$/i.test(path))
+  if (jsonPaths.length === 0) {
+    emitRuntimeMessage({ type: "updateURLs", data: "" })
+    emitRuntimeMessage({ type: "updateSubdomains", data: "" })
+    return { ok: true }
+  }
+
+  const fileContents = await Promise.all(
+    jsonPaths.map(path => readNativeFile(path).catch(() => ""))
+  )
+  const events = fileContents.flatMap(parseStructuredScanEvents)
+
+  emitRuntimeMessage({ type: "updateURLs", data: buildUrlsOutput(events) })
+  emitRuntimeMessage({ type: "updateSubdomains", data: buildSubdomainsOutput(events) })
+
+  return { ok: true }
+}
+
+async function fetchSubdomains(filePath) {
+  try {
+    const response = await browser.runtime.sendNativeMessage("bbot_host", { command: "getSubdomains", subdomains: filePath })
+    if (response.error) {
+      throw new Error(response.error)
+    }
+    return response.data
+  } catch (error) {
+    throw new Error("Error communicating with bbot_host.")
+  }
+}
+
+async function ensureEnvironmentReady() {
+  if (environmentState.hostConfigured === null || environmentState.status === "checking") {
+    await refreshEnvironmentState()
+  }
+  return environmentState.hostConfigured && environmentState.bbotInstalled
+}
+
+async function handleDeployRequest() {
+  if (environmentState.hostConfigured === null) {
+    await refreshEnvironmentState()
+  }
+
+  if (!environmentState.hostConfigured) {
+    appendScanOutput(`[ERROR] ${environmentState.message}`)
+    return { ok: false, reason: "host-missing" }
+  }
+
+  const activePort = connectNative()
+  if (!activePort) {
+    appendScanOutput(`[ERROR] ${environmentState.message}`)
+    return { ok: false, reason: "host-missing" }
+  }
+
+  const result = await browser.storage.local.get("deployScriptPath")
+  appendScanOutput(`[INFO] ${environmentState.updateAvailable ? "Updating BBOT..." : "Deploying BBOT..."}`)
+  activePort.postMessage({
+    command: "deploy",
+    deployDir: result.deployScriptPath || ""
+  })
+  return { ok: true }
+}
+
+async function handleRunScan(msg) {
+  const ready = await ensureEnvironmentReady()
+  if (!ready) {
+    appendScanOutput(`[ERROR] ${environmentState.message}`)
+    return { ok: false, reason: "environment-not-ready" }
+  }
+
+  const activePort = connectNative()
+  if (!activePort) {
+    appendScanOutput(`[ERROR] ${environmentState.message}`)
+    return { ok: false, reason: "host-missing" }
+  }
+
+  hosts.add(msg.target)
+  const eventType = msg.eventType && msg.eventType !== "*" ? msg.eventType : ""
+
+  activePort.postMessage({
+    command: "scan",
+    target: msg.target,
+    scantype: msg.scanType,
+    deadly: msg.deadly,
+    eventtype: eventType,
+    moddep: msg.moddep,
+    flagtype: msg.flagType,
+    burp: msg.burp,
+    viewtype: msg.viewtype,
+    scope: msg.scope
+  })
+
+  return { ok: true }
+}
+
+browser.runtime.onMessage.addListener(msg => {
+  if (msg.type === "getEnvironmentState") {
+    return Promise.resolve(environmentState)
+  }
+
+  if (msg.type === "refreshEnvironmentState") {
+    return refreshEnvironmentState()
+  }
+
+  if (msg.type === "deployBbot") {
+    return handleDeployRequest()
+  }
+
+  if (msg.type === "runScan") {
+    return handleRunScan(msg)
+  }
+
+  if (msg.type === "getOutput") {
+    stream = 1
+    emitRuntimeMessage({ type: "updateOutput", data: scanOutput })
+    return Promise.resolve({ ok: true })
+  }
+
+  if (msg.type === "getHosts") {
+    emitRuntimeMessage({ type: "updateHosts", data: Array.from(hosts).join("\n") })
+    return Promise.resolve({ ok: true })
+  }
+
+  if (msg.type === "clearOutput") {
+    updateScanOutput("")
+    emitRuntimeMessage({ type: "updateURLs", data: "" })
+    emitRuntimeMessage({ type: "updateOutfiles", data: "" })
+    emitRuntimeMessage({ type: "updateSubdomains", data: "" })
+    return Promise.resolve({ ok: true })
+  }
+
+  if (msg.type === "clearHosts") {
+    hosts.clear()
+    emitRuntimeMessage({ type: "updateHosts", data: "" })
+    return Promise.resolve({ ok: true })
+  }
+
+  if (msg.type === "getURLS") {
+    return refreshDerivedOutputs()
+  }
+
+  if (msg.type === "getOutfile") {
+    return refreshDerivedOutputs()
+  }
+
+  if (msg.type === "killScan") {
+    const activePort = connectNative()
+    if (activePort) {
+      activePort.postMessage({ command: "killScan" })
+    }
+    return Promise.resolve({ ok: true })
+  }
+
+  if (msg.type === "getSubdomains") {
+    return fetchSubdomains(msg.subdomains)
+      .then(data => {
+        emitRuntimeMessage({ type: "updateSubdomains", data })
+        return { ok: true }
+      })
+      .catch(error => {
+        emitRuntimeMessage({ type: "updateSubdomains", data: error.message })
+        return { ok: false }
+      })
+  }
+
+  if (msg.type === "toggleStream") {
+    stream = msg.stream ? 1 : 0
+    if (stream === 1) {
+      emitRuntimeMessage({ type: "updateOutput", data: scanOutput })
+    }
+    return Promise.resolve({ ok: true })
+  }
+
+  return false
+})

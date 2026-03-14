@@ -130,6 +130,58 @@ h1 {
   align-items: center;
 }
 
+.status-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  background: #111827;
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
+.status-message-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-command {
+  display: inline-block;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(13, 17, 23, 0.85);
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.status-banner.warning {
+  border-color: #d97706;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+.status-banner.error {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.12);
+}
+
+.status-banner.neutral {
+  border-color: #4b5563;
+  background: rgba(75, 85, 99, 0.2);
+}
+
+.status-meta {
+  display: flex;
+  gap: 12px;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
 .theme-menu {
   position: absolute;
   top: 100%;
@@ -206,6 +258,20 @@ h1 {
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
+}
+
+.main-content h2 > span,
+.output-container h2 > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+.main-content h2 svg,
+.output-container h2 svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .main-content h2 .chevron {
@@ -293,7 +359,13 @@ h1 {
   font-size: 14px;
 }
 
-/* Subdomain file select styling */
+.action-button:disabled,
+.select-field:disabled,
+#getSubdomains:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 #getSubdomains {
   background: #161b22;
   border: 1px solid #30363d;
@@ -321,8 +393,7 @@ h1 {
   box-shadow: 0 0 0 2px rgba(80, 70, 228, 0.3);
 }
 
-/* Zoom functionality cause getting old sux*/
-.app-container {
+.app-container.zoomed {
   transform-origin: top left;
   width: calc(100% / var(--zoom-level));
   min-width: calc(100% / var(--zoom-level));
@@ -509,6 +580,10 @@ h1 {
   overflow: hidden;
 }
 
+.scan-output-container {
+  flex: 1 1 0;
+}
+
 .output-container.collapsed {
   flex: 0;
   min-height: 44px;
@@ -597,7 +672,6 @@ input[type='checkbox'] {
   cursor: pointer;
 }
 
-/* Add smooth hover states */
 .btn-primary:hover {
   background: #4338ca;
 }
@@ -612,7 +686,6 @@ input[type='checkbox'] {
   border-color: #5046e4;
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -635,11 +708,11 @@ input[type='checkbox'] {
   max-width: 180px;
 }
 
-/* Tabbed interface styles */
 .tabs {
   display: flex;
   border-bottom: 1px solid #30363d;
   margin-bottom: 10px;
+  flex: 0 0 auto;
 }
 
 .tab {
@@ -664,22 +737,23 @@ input[type='checkbox'] {
   background: #0d1117;
   border-radius: 4px;
   margin-top: 10px;
-  min-height: 150px;
-  height: 100%;
+  min-height: 0;
   box-sizing: border-box;
+  flex: 1 1 0;
 }
 
 .tab-content.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
   border: 1px solid #30363d;
   overflow: hidden;
-  height: 100%;
+  min-height: 0;
 }
 
 .tab-content pre {
   margin: 0;
-  height: 100%;
-  min-height: inherit;
+  flex: 1 1 0;
+  min-height: 0;
   border: none;
   border-radius: 0;
   background: transparent;
