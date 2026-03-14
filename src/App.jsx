@@ -1,6 +1,5 @@
 import React from 'react'
 import { useState, useEffect, useCallback } from 'react'
-import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronDown, Shield, Terminal, Target, Database, FileSearch, Trash2, Play, Download, XCircle } from 'lucide-react'
 import clsx from 'clsx'
 import './styles.css'
@@ -76,6 +75,27 @@ const MODULE_DEP_OPTIONS = [
   { value: '--install-all-deps', label: 'Install All' }
 ]
 
+function parseListInput(value) {
+  return [...new Set(String(value || '')
+    .split(/[\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean))]
+}
+
+function appendListValue(currentValue, nextValue) {
+  const value = String(nextValue || '').trim()
+  if (!value) {
+    return currentValue
+  }
+
+  const existingValues = parseListInput(currentValue)
+  if (existingValues.includes(value)) {
+    return currentValue
+  }
+
+  return existingValues.length === 0 ? value : `${existingValues.join('\n')}\n${value}`
+}
+
 function App() {
   const [target, setTarget] = useState('')
   const [scanResults, setScanResults] = useState('')
@@ -89,6 +109,8 @@ function App() {
   const [isOutputCollapsed, setIsOutputCollapsed] = useState(false)
   const [isTargetsCollapsed, setIsTargetsCollapsed] = useState(false)
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false)
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(true)
+  const [isActionsCollapsed, setIsActionsCollapsed] = useState(true)
   const [outputIcon, setOutputIcon] = useState('bls_icon_light.png')
   const [isStreaming, setIsStreaming] = useState(true)
   const [activeTab, setActiveTab] = useState('raw')
@@ -104,6 +126,8 @@ function App() {
   const [useBurp, setUseBurp] = useState(false)
   const [viewPreset, setViewPreset] = useState(false)
   const [strictScope, setStrictScope] = useState(false)
+  const [whitelistTargets, setWhitelistTargets] = useState('')
+  const [blacklistTargets, setBlacklistTargets] = useState('')
 
   const applyEnvironmentState = useCallback((data) => {
     if (!data) {
@@ -291,6 +315,10 @@ function App() {
   }
 
   const handleScan = () => {
+    const parsedTargets = parseListInput(target)
+    const parsedWhitelist = parseListInput(whitelistTargets)
+    const parsedBlacklist = parseListInput(blacklistTargets)
+
     if (!environmentState.hostConfigured) {
       setScanResults(environmentState.message || 'Native host is not configured.')
       return
@@ -306,15 +334,18 @@ function App() {
       return
     }
 
-    if (!target.trim()) {
-      alert('Please enter a target domain')
+    if (parsedTargets.length === 0) {
+      alert('Please enter at least one target')
       return
     }
 
-    setScanResults(viewPreset ? 'Loading current preset...' : 'Scanning target...')
+    setScanResults(viewPreset ? 'Loading current preset...' : `Scanning ${parsedTargets.length} target${parsedTargets.length === 1 ? '' : 's'}...`)
 
     sendMessage('runScan', {
-      target: target.trim(),
+      target: parsedTargets[0],
+      targets: parsedTargets,
+      whitelist: parsedWhitelist,
+      blacklist: parsedBlacklist,
       scanType: selectedPreset,
       deadly: allowDeadly ? '--allow-deadly' : '',
       eventType: selectedEventType,
@@ -340,7 +371,7 @@ function App() {
   const showStatusBanner = ['checking', 'host-missing', 'missing', 'outdated'].includes(environmentState.status)
   const deployButtonLabel = environmentState.status === 'outdated' ? 'Update BBOT' : 'Deploy BBOT'
   const bbotOptionsDisabled = !environmentState.hostConfigured || !environmentState.bbotInstalled || (environmentState.bbotInstalled && !environmentState.capabilitiesLoaded)
-  const scanDisabled = !environmentState.hostConfigured || !environmentState.bbotInstalled || !selectedPreset
+  const scanDisabled = !environmentState.hostConfigured || !environmentState.bbotInstalled || !selectedPreset || parseListInput(target).length === 0
 
   return (
     <div className={`app-container ${zoom !== 1 ? 'zoomed' : ''}`} style={zoom !== 1 ? { transform: `scale(${zoom})` } : undefined}>
@@ -456,22 +487,36 @@ function App() {
         </h2>
         <div className="settings-section">
           <div className="select-group">
-            <label>Target</label>
-            <input
-              type="text"
+            <label>Targets</label>
+            <textarea
               id="target"
-              list="recentDomains"
-              placeholder="Enter URL or select from history"
-              className="target-input"
+              rows="4"
+              placeholder="Enter one target per line"
+              className="target-input target-textarea"
               value={target}
               onChange={(event) => setTarget(event.target.value)}
             />
-            <datalist id="recentDomains">
-              {recentDomains.map((domain, index) => (
-                <option key={index} value={domain} />
-              ))}
-            </datalist>
           </div>
+
+          {recentDomains.length > 0 && (
+            <div className="select-group">
+              <label>Add Recent Domain</label>
+              <select
+                id="recentDomains"
+                className="select-field recent-targets-select"
+                defaultValue=""
+                onChange={(event) => {
+                  setTarget((previous) => appendListValue(previous, event.target.value))
+                  event.target.value = ''
+                }}
+              >
+                <option value="">Select from history</option>
+                {recentDomains.map((domain, index) => (
+                  <option key={index} value={domain}>{domain}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <select
             id="scanSelect"
@@ -504,67 +549,101 @@ function App() {
             ))}
           </select>
 
-          <Accordion.Root type="single" collapsible className="accordion-root">
-            <Accordion.Item value="advanced" className="accordion-item">
-              <Accordion.Trigger className="accordion-trigger">
-                Advanced Settings
-                <ChevronDown className="accordion-chevron" />
-              </Accordion.Trigger>
-              <Accordion.Content className="accordion-content">
-                <div className="advanced-settings">
-                  <div className="select-group">
-                    <label>Module Dependencies</label>
-                    <select
-                      id="modDeps"
-                      className="select-field"
-                      value={moduleDep}
-                      onChange={(event) => setModuleDep(event.target.value)}
-                    >
-                      {MODULE_DEP_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
+          <button className="action-button scan-button" onClick={handleScan} disabled={scanDisabled}>
+            <Play size={14} /> Run Scan
+          </button>
+        </div>
+      </div>
 
-                  <div className="select-group">
-                    <label>Flag Type</label>
-                    <select
-                      id="flagSelect"
-                      className="select-field"
-                      value={selectedFlag}
-                      onChange={(event) => setSelectedFlag(event.target.value)}
-                      disabled={bbotOptionsDisabled}
-                    >
-                      <option value="">N/A</option>
-                      {environmentState.flags.map((flag) => (
-                        <option key={flag} value={flag}>{flag}</option>
-                      ))}
-                    </select>
-                  </div>
+      <div className={`main-content ${isControlsCollapsed ? 'collapsed' : ''}`}>
+        <h2 onClick={() => setIsControlsCollapsed(!isControlsCollapsed)}>
+          <span><Shield size={16} /> Scan Controls</span>
+          <ChevronDown className="chevron" size={16} />
+        </h2>
+        <div className="controls-section">
+          <div className="advanced-settings">
+            <div className="select-group">
+              <label>Module Dependencies</label>
+              <select
+                id="modDeps"
+                className="select-field"
+                value={moduleDep}
+                onChange={(event) => setModuleDep(event.target.value)}
+              >
+                {MODULE_DEP_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
 
-                  <div className="checkbox-group">
-                    <label>
-                      <input type="checkbox" id="allowDeadly" checked={allowDeadly} onChange={(event) => setAllowDeadly(event.target.checked)} />
-                      Allow Deadly
-                    </label>
-                    <label>
-                      <input type="checkbox" id="burpsuite" checked={useBurp} onChange={(event) => setUseBurp(event.target.checked)} />
-                      Use Burp Proxy
-                    </label>
-                    <label>
-                      <input type="checkbox" id="viewPreset" checked={viewPreset} onChange={(event) => setViewPreset(event.target.checked)} />
-                      View Preset
-                    </label>
-                    <label>
-                      <input type="checkbox" id="strictScope" checked={strictScope} onChange={(event) => setStrictScope(event.target.checked)} />
-                      Strict Scope
-                    </label>
-                  </div>
-                </div>
-              </Accordion.Content>
-            </Accordion.Item>
-          </Accordion.Root>
+            <div className="select-group">
+              <label>Flag Type</label>
+              <select
+                id="flagSelect"
+                className="select-field"
+                value={selectedFlag}
+                onChange={(event) => setSelectedFlag(event.target.value)}
+                disabled={bbotOptionsDisabled}
+              >
+                <option value="">N/A</option>
+                {environmentState.flags.map((flag) => (
+                  <option key={flag} value={flag}>{flag}</option>
+                ))}
+              </select>
+            </div>
 
+            <div className="select-group">
+              <label>Whitelist</label>
+              <textarea
+                id="whitelistInput"
+                rows="2"
+                className="target-input target-textarea scope-textarea"
+                placeholder="Optional in-scope targets, one per line"
+                value={whitelistTargets}
+                onChange={(event) => setWhitelistTargets(event.target.value)}
+              />
+            </div>
+
+            <div className="select-group">
+              <label>Blacklist</label>
+              <textarea
+                id="blacklistInput"
+                rows="2"
+                className="target-input target-textarea scope-textarea"
+                placeholder="Optional excluded targets, one per line"
+                value={blacklistTargets}
+                onChange={(event) => setBlacklistTargets(event.target.value)}
+              />
+            </div>
+
+            <div className="checkbox-group">
+              <label>
+                <input type="checkbox" id="allowDeadly" checked={allowDeadly} onChange={(event) => setAllowDeadly(event.target.checked)} />
+                Allow Deadly
+              </label>
+              <label>
+                <input type="checkbox" id="burpsuite" checked={useBurp} onChange={(event) => setUseBurp(event.target.checked)} />
+                Use Burp Proxy
+              </label>
+              <label>
+                <input type="checkbox" id="viewPreset" checked={viewPreset} onChange={(event) => setViewPreset(event.target.checked)} />
+                View Preset
+              </label>
+              <label>
+                <input type="checkbox" id="strictScope" checked={strictScope} onChange={(event) => setStrictScope(event.target.checked)} />
+                Strict Scope
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`main-content ${isActionsCollapsed ? 'collapsed' : ''}`}>
+        <h2 onClick={() => setIsActionsCollapsed(!isActionsCollapsed)}>
+          <span><Shield size={16} /> Actions</span>
+          <ChevronDown className="chevron" size={16} />
+        </h2>
+        <div className="controls-section">
           <div className="button-row">
             <div className="button-group">
               <button className="action-button" onClick={() => sendMessage('getOutput')}>
@@ -611,9 +690,6 @@ function App() {
                 ))}
               </select>
             </div>
-            <button className="action-button scan-button" onClick={handleScan} disabled={scanDisabled}>
-              <Play size={14} /> Run Scan
-            </button>
           </div>
         </div>
       </div>

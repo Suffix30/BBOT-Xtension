@@ -295,7 +295,12 @@ h1 {
   display: none;
 }
 
-.settings-section {
+.main-content.collapsed .controls-section {
+  display: none;
+}
+
+.settings-section,
+.controls-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -314,8 +319,14 @@ h1 {
   margin-bottom: 12px;
 }
 
-.accordion-root {
-  margin-bottom: 12px;
+.target-textarea {
+  min-height: 84px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.scope-textarea {
+  min-height: 68px;
 }
 
 .button-row {
@@ -458,11 +469,21 @@ h1 {
   margin-bottom: 0;
 }
 
+.recent-targets-select {
+  margin-bottom: 12px;
+}
+
 .checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 16px;
   margin-top: 12px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .button-group {

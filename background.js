@@ -68,6 +68,11 @@ const backgroundReady = browser.storage && browser.storage.local && browser.stor
     }).catch(() => {})
   : Promise.resolve()
 
+function normalizeListInput(value) {
+  const values = Array.isArray(value) ? value : String(value || "").split(/[\n,]+/)
+  return [...new Set(values.map(entry => String(entry || "").trim()).filter(Boolean))]
+}
+
 function emitRuntimeMessage(message) {
   const result = browser.runtime.sendMessage(message)
   if (result && typeof result.catch === "function") {
@@ -458,12 +463,23 @@ async function handleRunScan(msg) {
     return { ok: false, reason: "host-missing" }
   }
 
-  hosts.add(msg.target)
+  const targets = normalizeListInput(Array.isArray(msg.targets) && msg.targets.length > 0 ? msg.targets : msg.target)
+  const whitelist = normalizeListInput(msg.whitelist)
+  const blacklist = normalizeListInput(msg.blacklist)
+  if (targets.length === 0) {
+    appendScanOutput("[ERROR] Target is required")
+    return { ok: false, reason: "missing-target" }
+  }
+
+  targets.forEach(target => hosts.add(target))
   const eventType = msg.eventType && msg.eventType !== "*" ? msg.eventType : ""
 
   activePort.postMessage({
     command: "scan",
-    target: msg.target,
+    target: targets[0],
+    targets,
+    whitelist,
+    blacklist,
     scantype: msg.scanType,
     deadly: msg.deadly,
     eventtype: eventType,

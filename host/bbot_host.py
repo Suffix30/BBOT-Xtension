@@ -92,8 +92,43 @@ def sanitize_output_name(value):
     return sanitized or "scan"
 
 
-def build_scan_command(bbot_path, target, scantype, deadly, eventtype, moddep, flagtype, burp, scope):
-    cmd = [bbot_path, "-t", target, "-y", "-p", scantype]
+def normalize_list_input(value):
+    if isinstance(value, (list, tuple, set)):
+        items = value
+    else:
+        items = re.split(r"[\r\n,]+", str(value or ""))
+
+    normalized = []
+    seen = set()
+    for item in items:
+        token = str(item or "").strip()
+        if token and token not in seen:
+            seen.add(token)
+            normalized.append(token)
+    return normalized
+
+
+def build_output_stem(targets):
+    normalized_targets = normalize_list_input(targets)
+    if not normalized_targets:
+        return "scan"
+    first_target = sanitize_output_name(normalized_targets[0])
+    if len(normalized_targets) == 1:
+        return first_target
+    return f"{first_target}_plus_{len(normalized_targets) - 1}"
+
+
+def build_scan_command(bbot_path, targets, scantype, deadly, eventtype, moddep, flagtype, burp, scope, whitelist=None, blacklist=None):
+    normalized_targets = normalize_list_input(targets)
+    normalized_whitelist = normalize_list_input(whitelist)
+    normalized_blacklist = normalize_list_input(blacklist)
+    cmd = [bbot_path, "-t", *normalized_targets, "-y", "-p", scantype]
+
+    if normalized_whitelist:
+        cmd.extend(["-w", *normalized_whitelist])
+
+    if normalized_blacklist:
+        cmd.extend(["-b", *normalized_blacklist])
 
     if flagtype:
         cmd.extend(["-f", flagtype])
@@ -289,13 +324,15 @@ def emit_current_preset(cmd):
         raise RuntimeError(f"Failed to load current preset (exit code {returncode})")
 
 
-def run_scan(target, scantype, deadly, eventtype, moddep, flagtype, burp, viewtype, scope):
+def run_scan(targets, scantype, deadly, eventtype, moddep, flagtype, burp, viewtype, scope, whitelist=None, blacklist=None):
     global bbot_process, scan_terminated
 
-    target = str(target or "").strip()
+    targets = normalize_list_input(targets)
+    whitelist = normalize_list_input(whitelist)
+    blacklist = normalize_list_input(blacklist)
     scantype = str(scantype or "").strip()
 
-    if not target:
+    if not targets:
         send_message({"type": "error", "data": "Target is required"})
         return
 
@@ -308,8 +345,20 @@ def run_scan(target, scantype, deadly, eventtype, moddep, flagtype, burp, viewty
         send_message({"type": "error", "data": "BBOT is not installed. Press Deploy BBOT to install it first."})
         return
 
-    cmd = build_scan_command(bbot_path, target, scantype, deadly, eventtype, moddep, flagtype, burp, scope)
-    output_path = os.path.abspath(f"{sanitize_output_name(target)}_output.txt")
+    cmd = build_scan_command(
+        bbot_path,
+        targets,
+        scantype,
+        deadly,
+        eventtype,
+        moddep,
+        flagtype,
+        burp,
+        scope,
+        whitelist,
+        blacklist,
+    )
+    output_path = os.path.abspath(f"{build_output_stem(targets)}_output.txt")
 
     try:
         if viewtype:
@@ -431,7 +480,7 @@ def main():
         command = msg.get("command")
         if command == "scan":
             run_scan(
-                msg.get("target", ""),
+                msg.get("targets", msg.get("target", "")),
                 msg.get("scantype", ""),
                 msg.get("deadly", ""),
                 msg.get("eventtype", ""),
@@ -440,6 +489,8 @@ def main():
                 msg.get("burp", ""),
                 msg.get("viewtype", ""),
                 msg.get("scope", ""),
+                msg.get("whitelist", ""),
+                msg.get("blacklist", ""),
             )
         elif command == "deploy":
             send_message(run_deploy(msg.get("deployDir", "")))
