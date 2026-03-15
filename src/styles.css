@@ -299,6 +299,84 @@ h1 {
   display: none;
 }
 
+.control-sections {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: min(58vh, 640px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 12px;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
+.control-sections .main-content:last-child {
+  margin-bottom: 0;
+}
+
+.control-sections.expanded {
+  flex: 1 1 auto;
+  max-height: none;
+}
+
+.sidebar-mode-bar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sidebar-mode-select-group {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sidebar-mode-select-group .select-field {
+  margin-bottom: 0;
+}
+
+.sidebar-mode-summary {
+  color: #8b949e;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.app-container.sidebar-mode-heavy {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.app-container.sidebar-mode-heavy .control-sections {
+  flex: 0 0 auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.app-container.sidebar-mode-heavy .output-section {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
+.app-container.sidebar-mode-heavy .output-container,
+.app-container.sidebar-mode-heavy .scan-output-container {
+  flex: 0 0 auto;
+  max-height: none;
+}
+
+.app-container.sidebar-mode-heavy .targets-output-container:not(.collapsed) .hosts-area,
+.app-container.sidebar-mode-heavy .scan-output-container:not(.collapsed) .results-container {
+  height: auto;
+  min-height: 180px;
+  max-height: 320px;
+}
+
+.app-container.sidebar-mode-heavy .scan-output-container:not(.collapsed) .tab-content.active {
+  min-height: 220px;
+}
+
 .settings-section,
 .controls-section {
   display: flex;
@@ -327,6 +405,10 @@ h1 {
 
 .scope-textarea {
   min-height: 68px;
+}
+
+.accordion-root {
+  margin-bottom: 12px;
 }
 
 .button-row {
@@ -377,6 +459,7 @@ h1 {
   opacity: 0.55;
 }
 
+/* Subdomain file select styling */
 #getSubdomains {
   background: #161b22;
   border: 1px solid #30363d;
@@ -404,6 +487,7 @@ h1 {
   box-shadow: 0 0 0 2px rgba(80, 70, 228, 0.3);
 }
 
+/* Zoom functionality cause getting old sux*/
 .app-container.zoomed {
   transform-origin: top left;
   width: calc(100% / var(--zoom-level));
@@ -471,6 +555,10 @@ h1 {
 
 .recent-targets-select {
   margin-bottom: 12px;
+}
+
+.helper-select {
+  margin-top: -4px;
 }
 
 .checkbox-group {
@@ -586,6 +674,16 @@ h1 {
   z-index: 1;
 }
 
+.output-section.outputs-fully-collapsed {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
+.output-section.outputs-fully-collapsed .output-container {
+  flex: 0 0 auto;
+}
+
 .output-container {
   background: #161b22;
   border: 1px solid #30363d;
@@ -676,6 +774,58 @@ h1 {
   gap: 16px;
 }
 
+.custom-sidebar-settings {
+  gap: 12px;
+}
+
+.custom-layout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.custom-layout-status {
+  display: inline-flex;
+  margin-top: 8px;
+  color: #8b949e;
+  font-size: 13px;
+}
+
+.section-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px 12px;
+}
+
+.section-toggle-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #0d1117;
+}
+
+.compact-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 12px;
+  align-items: start;
+}
+
+.compact-settings-grid .select-group {
+  min-width: 0;
+}
+
+.compact-settings-grid .scope-textarea {
+  min-height: 56px;
+}
+
 .select-group {
   display: flex;
   flex-direction: column;
@@ -693,6 +843,7 @@ input[type='checkbox'] {
   cursor: pointer;
 }
 
+/* Add smooth hover states */
 .btn-primary:hover {
   background: #4338ca;
 }
@@ -707,6 +858,7 @@ input[type='checkbox'] {
   border-color: #5046e4;
 }
 
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -729,6 +881,7 @@ input[type='checkbox'] {
   max-width: 180px;
 }
 
+/* Tabbed interface styles */
 .tabs {
   display: flex;
   border-bottom: 1px solid #30363d;

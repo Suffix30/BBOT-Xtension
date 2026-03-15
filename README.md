@@ -31,6 +31,9 @@ The following images showcase the BBOT Scanner Firefox Extension's user interfac
 - Multi-target scans with one target per line
 - Add recent domains from browser history into the target list
 - Real-time scan output streaming
+- Custom scan names for easier report tracking
+- Additional BBOT output modules can be enabled from the sidebar
+- Sidebar profiles with `Light`, `Heavy`, and `Custom` layouts
 - Customizable UI themes:
   - Default
   - Dark (Cyberpunk)
@@ -51,16 +54,18 @@ The following images showcase the BBOT Scanner Firefox Extension's user interfac
 - Advanced scanning options:
   - Event type filtering
   - Module dependency management
+  - Module include and exclude controls
+  - Flag include, require, and exclude controls
   - Burp proxy integration
-  - Flag type selection
   - Strict scope
   - Whitelist targets
   - Blacklist targets
+  - Additional output/report modules
 
 - Split sidebar controls for smaller layouts:
-  - Settings
-  - Scan Controls
-  - Actions
+  - `Light` keeps only the core scan and output sections visible
+  - `Heavy` exposes the full control surface in one scrolling sidebar
+  - `Custom` lets users choose visible sections, save named layouts with appearance settings, and import/export layout files
 
 ## Installation
 
@@ -110,10 +115,16 @@ This will create a `bbot-scanner.xpi` file in the `BBOT-Xtension/` project root.
 - If BBOT is missing, the panel shows `Deploy BBOT`.
 - If BBOT is installed but out of date, the panel shows `Update BBOT`.
 - If BBOT is current, the button is hidden.
-- Presets, flags, and event types are loaded from the installed BBOT runtime.
+- Presets, modules, output modules, flags, and event types are loaded from the installed BBOT runtime.
 - Targets can be entered one per line to run a scan against multiple targets.
 - Scope options are available through `Whitelist`, `Blacklist`, and `Strict Scope`.
-- The sidebar is split into `Settings`, `Scan Controls`, and `Actions` so the main scan inputs stay reachable in narrow Firefox sidebars.
+- Scan names and additional output modules can be set before a run to control report naming and extra BBOT artifacts.
+- The sidebar mode can be switched between `Light`, `Heavy`, and `Custom`.
+- `Light` is intended to keep the sidebar focused on the core scan flow.
+- `Heavy` keeps advanced controls and output panels in the same scrolling stack so results stay usable when the full UI is enabled.
+- `Custom` includes a sidebar builder where users can choose visible sections, save named layouts locally, delete them, or export/import them as JSON files.
+- Saved custom layouts now include sidebar visibility plus the selected extension layout and theme.
+- Custom layout files store UI preferences only. BBOT presets, modules, flags, output modules, and event types still load dynamically from the installed BBOT runtime.
 
 ## Project Structure
 
@@ -163,6 +174,14 @@ npm run build
 npm run dev
 ```
 
+### Firefox Development Run
+
+```bash
+npm run dev:firefox
+```
+
+This builds the extension and launches Firefox with the current development build loaded.
+
 ### Preview
 
 ```bash
@@ -173,6 +192,10 @@ npm run preview
 
 ```bash
 npm test
+```
+
+```bash
+npm run test:js
 ```
 
 ## Themes and Layouts

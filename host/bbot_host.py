@@ -118,10 +118,36 @@ def build_output_stem(targets):
     return f"{first_target}_plus_{len(normalized_targets) - 1}"
 
 
-def build_scan_command(bbot_path, targets, scantype, deadly, eventtype, moddep, flagtype, burp, scope, whitelist=None, blacklist=None):
+def build_scan_command(
+    bbot_path,
+    targets,
+    scantype,
+    deadly,
+    eventtype,
+    moddep,
+    flagtype,
+    burp,
+    scope,
+    whitelist=None,
+    blacklist=None,
+    flags=None,
+    required_flags=None,
+    excluded_flags=None,
+    modules=None,
+    excluded_modules=None,
+    output_modules=None,
+    scan_name="",
+):
     normalized_targets = normalize_list_input(targets)
     normalized_whitelist = normalize_list_input(whitelist)
     normalized_blacklist = normalize_list_input(blacklist)
+    normalized_flags = normalize_list_input(flags)
+    normalized_required_flags = normalize_list_input(required_flags)
+    normalized_excluded_flags = normalize_list_input(excluded_flags)
+    normalized_modules = normalize_list_input(modules)
+    normalized_excluded_modules = normalize_list_input(excluded_modules)
+    normalized_output_modules = normalize_list_input(output_modules)
+    scan_name = str(scan_name or "").strip()
     cmd = [bbot_path, "-t", *normalized_targets, "-y", "-p", scantype]
 
     if normalized_whitelist:
@@ -130,8 +156,29 @@ def build_scan_command(bbot_path, targets, scantype, deadly, eventtype, moddep, 
     if normalized_blacklist:
         cmd.extend(["-b", *normalized_blacklist])
 
+    if scan_name:
+        cmd.extend(["-n", scan_name])
+
+    if normalized_modules:
+        cmd.extend(["-m", *normalized_modules])
+
+    if normalized_excluded_modules:
+        cmd.extend(["-em", *normalized_excluded_modules])
+
     if flagtype:
-        cmd.extend(["-f", flagtype])
+        normalized_flags = normalize_list_input([flagtype, *normalized_flags])
+
+    if normalized_flags:
+        cmd.extend(["-f", *normalized_flags])
+
+    if normalized_required_flags:
+        cmd.extend(["-rf", *normalized_required_flags])
+
+    if normalized_excluded_flags:
+        cmd.extend(["-ef", *normalized_excluded_flags])
+
+    if normalized_output_modules:
+        cmd.extend(["-om", *normalized_output_modules])
 
     if eventtype and eventtype != "*":
         cmd.extend(["--event-types", eventtype])
@@ -228,6 +275,7 @@ def get_bbot_capabilities():
     capabilities = {
         "presets": [],
         "modules": [],
+        "outputModules": [],
         "flags": [],
         "eventTypes": [],
     }
@@ -258,6 +306,10 @@ def get_bbot_capabilities():
         capabilities["modules"] = unique_sorted(modules)
         capabilities["flags"] = unique_sorted(flags)
         capabilities["eventTypes"] = unique_sorted(event_types)
+
+    output_modules_returncode, output_modules_output = run_process_capture([bbot_path, "--list-output-modules"])
+    if output_modules_returncode == 0:
+        capabilities["outputModules"] = [row[0] for row in parse_table_rows(output_modules_output) if row and row[0]]
 
     return capabilities
 
@@ -324,12 +376,38 @@ def emit_current_preset(cmd):
         raise RuntimeError(f"Failed to load current preset (exit code {returncode})")
 
 
-def run_scan(targets, scantype, deadly, eventtype, moddep, flagtype, burp, viewtype, scope, whitelist=None, blacklist=None):
+def run_scan(
+    targets,
+    scantype,
+    deadly,
+    eventtype,
+    moddep,
+    flagtype,
+    burp,
+    viewtype,
+    scope,
+    whitelist=None,
+    blacklist=None,
+    flags=None,
+    required_flags=None,
+    excluded_flags=None,
+    modules=None,
+    excluded_modules=None,
+    output_modules=None,
+    scan_name="",
+):
     global bbot_process, scan_terminated
 
     targets = normalize_list_input(targets)
     whitelist = normalize_list_input(whitelist)
     blacklist = normalize_list_input(blacklist)
+    flags = normalize_list_input(flags)
+    required_flags = normalize_list_input(required_flags)
+    excluded_flags = normalize_list_input(excluded_flags)
+    modules = normalize_list_input(modules)
+    excluded_modules = normalize_list_input(excluded_modules)
+    output_modules = normalize_list_input(output_modules)
+    scan_name = str(scan_name or "").strip()
     scantype = str(scantype or "").strip()
 
     if not targets:
@@ -357,8 +435,16 @@ def run_scan(targets, scantype, deadly, eventtype, moddep, flagtype, burp, viewt
         scope,
         whitelist,
         blacklist,
+        flags,
+        required_flags,
+        excluded_flags,
+        modules,
+        excluded_modules,
+        output_modules,
+        scan_name,
     )
-    output_path = os.path.abspath(f"{build_output_stem(targets)}_output.txt")
+    output_stem = sanitize_output_name(scan_name) if scan_name else build_output_stem(targets)
+    output_path = os.path.abspath(f"{output_stem}_output.txt")
 
     try:
         if viewtype:
@@ -491,6 +577,13 @@ def main():
                 msg.get("scope", ""),
                 msg.get("whitelist", ""),
                 msg.get("blacklist", ""),
+                msg.get("flags", ""),
+                msg.get("requiredFlags", ""),
+                msg.get("excludedFlags", ""),
+                msg.get("modules", ""),
+                msg.get("excludedModules", ""),
+                msg.get("outputModules", ""),
+                msg.get("scanName", ""),
             )
         elif command == "deploy":
             send_message(run_deploy(msg.get("deployDir", "")))

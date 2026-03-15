@@ -51,6 +51,8 @@ const DEFAULT_ENVIRONMENT_STATE = {
   message: "Checking BBOT status...",
   capabilitiesLoaded: false,
   presets: [],
+  modules: [],
+  outputModules: [],
   flags: [],
   eventTypes: FALLBACK_EVENT_TYPES
 }
@@ -144,6 +146,8 @@ function normalizeCapabilitiesResponse(response) {
   const data = response && response.data ? response.data : {}
   return {
     presets: Array.isArray(data.presets) ? data.presets : [],
+    modules: Array.isArray(data.modules) ? data.modules : [],
+    outputModules: Array.isArray(data.outputModules) ? data.outputModules : [],
     flags: Array.isArray(data.flags) ? data.flags : [],
     eventTypes: Array.isArray(data.eventTypes) && data.eventTypes.length > 0 ? data.eventTypes : FALLBACK_EVENT_TYPES
   }
@@ -154,6 +158,8 @@ async function refreshCapabilities() {
     mergeEnvironmentState({
       capabilitiesLoaded: false,
       presets: [],
+      modules: [],
+      outputModules: [],
       flags: [],
       eventTypes: FALLBACK_EVENT_TYPES
     })
@@ -166,6 +172,8 @@ async function refreshCapabilities() {
     mergeEnvironmentState({
       capabilitiesLoaded: true,
       presets: capabilities.presets,
+      modules: capabilities.modules,
+      outputModules: capabilities.outputModules,
       flags: capabilities.flags,
       eventTypes: capabilities.eventTypes
     })
@@ -173,6 +181,8 @@ async function refreshCapabilities() {
     mergeEnvironmentState({
       capabilitiesLoaded: false,
       presets: [],
+      modules: [],
+      outputModules: [],
       flags: [],
       eventTypes: FALLBACK_EVENT_TYPES
     })
@@ -198,6 +208,8 @@ async function refreshEnvironmentState() {
       mergeEnvironmentState({
         capabilitiesLoaded: false,
         presets: [],
+        modules: [],
+        outputModules: [],
         flags: [],
         eventTypes: FALLBACK_EVENT_TYPES
       })
@@ -466,6 +478,17 @@ async function handleRunScan(msg) {
   const targets = normalizeListInput(Array.isArray(msg.targets) && msg.targets.length > 0 ? msg.targets : msg.target)
   const whitelist = normalizeListInput(msg.whitelist)
   const blacklist = normalizeListInput(msg.blacklist)
+  const modules = normalizeListInput(msg.modules)
+  const excludedModules = normalizeListInput(msg.excludedModules)
+  const flags = normalizeListInput(msg.flags)
+  if (msg.flagType) {
+    flags.unshift(msg.flagType)
+  }
+  const normalizedFlags = [...new Set(flags.filter(Boolean))]
+  const requiredFlags = normalizeListInput(msg.requiredFlags)
+  const excludedFlags = normalizeListInput(msg.excludedFlags)
+  const outputModules = normalizeListInput(msg.outputModules)
+  const scanName = String(msg.scanName || "").trim()
   if (targets.length === 0) {
     appendScanOutput("[ERROR] Target is required")
     return { ok: false, reason: "missing-target" }
@@ -480,11 +503,18 @@ async function handleRunScan(msg) {
     targets,
     whitelist,
     blacklist,
+    modules,
+    excludedModules,
+    flags: normalizedFlags,
+    requiredFlags,
+    excludedFlags,
+    outputModules,
+    scanName,
     scantype: msg.scanType,
     deadly: msg.deadly,
     eventtype: eventType,
     moddep: msg.moddep,
-    flagtype: msg.flagType,
+    flagtype: "",
     burp: msg.burp,
     viewtype: msg.viewtype,
     scope: msg.scope
@@ -573,3 +603,4 @@ browser.runtime.onMessage.addListener(msg => {
 
   return false
 })
+  
