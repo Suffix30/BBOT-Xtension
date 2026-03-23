@@ -7,7 +7,7 @@
   --matrix-border: rgba(0, 255, 0, 0.5);
   --matrix-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
   --matrix-inset: inset 0 0 20px rgba(0, 255, 0, 0.1);
-  --bls-icon: url('/assets/bls_icon_light.png');
+  --bls-icon: url('/assets/logos/bls_icon_light.png');
 }
 
 .theme-matrix .app-container {

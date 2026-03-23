@@ -8,7 +8,7 @@
   --accent-primary: #ff3e3e;
   --accent-secondary: #ff7070;
   --button-hover: #ff5252;
-  --bls-icon: url('/assets/bls_icon_light.png');
+  --bls-icon: url('/assets/logos/bls_icon_light.png');
 }
 
 .theme-dark .app-container {

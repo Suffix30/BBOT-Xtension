@@ -117,10 +117,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
-          const ext = info.pop();
-          const name = info.join('.');
-          return `assets/${name}.${ext}`;
+          const rawName = assetInfo?.names?.[0] || assetInfo?.originalFileNames?.[0] || assetInfo?.name || 'asset';
+          const normalizedName = rawName.replace(/\\/g, '/');
+          const ext = path.extname(normalizedName);
+          const name = path.basename(normalizedName, ext) || 'asset';
+          return `assets/${name}${ext || '.bin'}`;
         },
         chunkFileNames: '[name].[hash].js',
         entryFileNames: '[name].[hash].js'

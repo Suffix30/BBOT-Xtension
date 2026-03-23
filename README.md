@@ -94,7 +94,7 @@ release.
 
 3. Install frontend dependencies:
 ```bash
-npm install
+npm ci
 ```
 
 4. Build the extension:

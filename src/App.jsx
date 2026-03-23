@@ -261,7 +261,7 @@ function App() {
   const [isReportsCollapsed, setIsReportsCollapsed] = useState(true)
   const [isActionsCollapsed, setIsActionsCollapsed] = useState(true)
   const [isSidebarBuilderCollapsed, setIsSidebarBuilderCollapsed] = useState(false)
-  const [outputIcon, setOutputIcon] = useState('bls_icon_light.png')
+  const [outputIcon, setOutputIcon] = useState('/assets/logos/bls_icon_light.png')
   const [isStreaming, setIsStreaming] = useState(true)
   const [activeTab, setActiveTab] = useState('raw')
   const [recentDomains, setRecentDomains] = useState([])
@@ -312,6 +312,7 @@ function App() {
   const applyAppearance = useCallback((layoutValue, themeValue) => {
     const nextLayout = normalizeLayoutValue(layoutValue)
     const nextTheme = normalizeThemeValue(themeValue)
+    const nextOutputIcon = nextTheme === 'light' ? '/assets/logos/bls_icon_dark.png' : '/assets/logos/bls_icon_light.png'
 
     if (typeof document !== 'undefined' && document.body) {
       document.body.classList.remove(...LAYOUT_CLASS_NAMES, ...THEME_CLASS_NAMES)
@@ -323,9 +324,7 @@ function App() {
       }
     }
 
-    if (nextLayout === 'black-lantern') {
-      setOutputIcon(nextTheme === 'light' ? '/assets/logos/bls_icon_dark.png' : '/assets/logos/bls_icon_light.png')
-    }
+    setOutputIcon(nextOutputIcon)
 
     setCurrentLayout(nextLayout)
     setCurrentTheme(nextTheme)

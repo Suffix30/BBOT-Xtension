@@ -8,11 +8,11 @@
   --accent-primary: #3498db;
   --accent-secondary: #2980b9;
   --button-hover: #2574a9;
-  --bls-icon: url('/assets/bls_icon_light.png');
+  --bls-icon: url('/assets/logos/bls_icon_light.png');
 }
 
 .theme-light.layout-modern {
-  --bls-icon: url('/assets/bls_icon_dark.png');
+  --bls-icon: url('/assets/logos/bls_icon_dark.png');
 }
 
 .theme-light .app-container {

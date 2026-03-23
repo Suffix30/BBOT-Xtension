@@ -4,8 +4,8 @@
   "description": "",
   "scripts": {
     "dev": "vite",
-    "build": "node_modules/.bin/vite build --emptyOutDir && cd dist && ../node_modules/.bin/web-ext build --artifacts-dir .. --filename bbot-scanner.xpi --overwrite-dest",
-    "dev:firefox": "node_modules/.bin/vite build --emptyOutDir && mkdir -p \"$HOME/tmp-web-ext\" && TMPDIR=\"$HOME/tmp-web-ext\" DISPLAY=\"${DISPLAY:-:0}\" GDK_BACKEND=\"${GDK_BACKEND:-x11}\" MOZ_ENABLE_WAYLAND=\"${MOZ_ENABLE_WAYLAND:-0}\" node_modules/.bin/web-ext run --source-dir dist --firefox \"${FIREFOX_BIN:-$HOME/.local/bin/firefox-local}\" --verbose",
+    "build": "vite build --emptyOutDir && web-ext build --source-dir dist --artifacts-dir . --filename bbot-scanner.xpi --overwrite-dest",
+    "dev:firefox": "vite build --emptyOutDir && mkdir -p \"$HOME/tmp-web-ext\" && TMPDIR=\"$HOME/tmp-web-ext\" DISPLAY=\"${DISPLAY:-:0}\" GDK_BACKEND=\"${GDK_BACKEND:-x11}\" MOZ_ENABLE_WAYLAND=\"${MOZ_ENABLE_WAYLAND:-0}\" web-ext run --source-dir dist --firefox \"${FIREFOX_BIN:-$HOME/.local/bin/firefox-local}\" --verbose",
     "preview": "vite preview",
     "test": "pytest"
   },
@@ -21,9 +21,9 @@
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
-    "vite": "^5.0.0",
-    "web-ext": "^8.5.0"
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.2",
+    "web-ext": "^10.0.0"
   },
   "type": "module"
 }

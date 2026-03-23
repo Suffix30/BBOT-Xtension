@@ -7,11 +7,11 @@
   --accent-primary: #6e2bff;
   --accent-secondary: #5620cc;
   --border-color: rgba(110, 43, 255, 0.2);
-  --bls-icon: url('/assets/bls_icon_light.png');
+  --bls-icon: url('/assets/logos/bls_icon_light.png');
 }
 
 .theme-black-lantern.theme-light {
-  --bls-icon: url('/assets/bls_icon_dark.png');
+  --bls-icon: url('/assets/logos/bls_icon_dark.png');
 }
 
 .theme-black-lantern .app-container {

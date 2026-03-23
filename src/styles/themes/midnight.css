@@ -7,7 +7,7 @@
   --text-secondary: #94A3B8;
   --accent-primary: #6366F1;
   --accent-hover: #4F46E5;
-  --bls-icon: url('/assets/bls_icon_light.png');
+  --bls-icon: url('/assets/logos/bls_icon_light.png');
 }
 
 .theme-midnight .app-container {
